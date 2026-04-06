@@ -290,7 +290,7 @@ namespace PRoCon.Core.Remote
             }
         }
 
-        private static readonly ILogger _logger = PRoConLog.CreateLogger("PRoCon.FrostbiteConnection");
+        private static readonly ILogger _log = PRoConLog.CreateLogger("PRoCon.FrostbiteConnection");
 
         /// <summary>
         /// Logs an error with packet context. The original signature is preserved for
@@ -303,54 +303,11 @@ namespace PRoCon.Core.Remote
         {
             try
             {
-                // Build the structured detail string (kept for file fallback as well).
-                string strOutput = "=======================================" + Environment.NewLine + Environment.NewLine;
-
-                StackTrace stTracer = new StackTrace(e, true);
-                if (stTracer.FrameCount > 0)
-                {
-                    var frame = stTracer.GetFrame(stTracer.FrameCount - 1);
-                    strOutput += "Exception caught at: " + Environment.NewLine;
-                    strOutput += String.Format("{0}{1}", frame.GetFileName(), Environment.NewLine);
-                    strOutput += String.Format("Line {0}{1}", frame.GetFileLineNumber(), Environment.NewLine);
-                    strOutput += String.Format("Method {0}{1}", frame.GetMethod()?.Name, Environment.NewLine);
-                }
-
-                strOutput += "DateTime: " + DateTime.Now.ToLongDateString() + " " + DateTime.Now.ToLongTimeString() + Environment.NewLine;
-                strOutput += "Version: " + Assembly.GetExecutingAssembly().GetName().Version + Environment.NewLine;
-
-                strOutput += "Packet: " + Environment.NewLine;
-                strOutput += strPacket + Environment.NewLine;
-
-                strOutput += "Additional: " + Environment.NewLine;
-                strOutput += strAdditional + Environment.NewLine;
-
-                strOutput += Environment.NewLine;
-                strOutput += e.Message + Environment.NewLine;
-
-                strOutput += Environment.NewLine;
-                strOutput += stTracer.ToString();
-
-                // ---- Primary path: ILogger ----
-                _logger.LogError(e, "Packet={Packet} Additional={Additional}", strPacket, strAdditional);
-
-                // ---- Fallback path: DEBUG.txt (kept for environments without logging config) ----
-                try
-                {
-                    string debugPath = Path.Combine(ProConPaths.LogsDirectory, "DEBUG.txt");
-                    using (StreamWriter sw = File.AppendText(debugPath))
-                    {
-                        sw.Write(strOutput);
-                    }
-                }
-                catch (Exception)
-                {
-                    // Swallow file-write errors — the ILogger call above already recorded it.
-                }
+                _log.LogError(e, "Packet={Packet} Additional={Additional}", strPacket, strAdditional);
             }
             catch (Exception)
             {
-                // It'd be too ironic to happen, surely?
+                // Logging must never crash the application
             }
         }
 
@@ -767,7 +724,7 @@ namespace PRoCon.Core.Remote
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "TLS handshake failed for {Hostname}:{Port}. Connection aborted.", this.Hostname, this.Port);
+                _log.LogError(ex, "TLS handshake failed for {Hostname}:{Port}. Connection aborted.", this.Hostname, this.Port);
                 throw;
             }
         }
@@ -779,6 +736,8 @@ namespace PRoCon.Core.Remote
                 await this.Client.ConnectAsync(this.Hostname, this.Port).ConfigureAwait(false);
                 this.Client.NoDelay = true;
 
+                _log.LogInformation("TCP connected to {Host}:{Port}", this.Hostname, this.Port);
+
                 if (this.ConnectSuccess != null)
                 {
                     this.ConnectSuccess(this);
@@ -786,6 +745,8 @@ namespace PRoCon.Core.Remote
 
                 NetworkStream rawStream = this.Client.GetStream();
                 this.NetworkStream = await this.SetupStreamAsync(rawStream, cancellationToken).ConfigureAwait(false);
+
+                _log.LogInformation("Connection ready (stream established) for {Host}:{Port}", this.Hostname, this.Port);
 
                 if (this.ConnectionReady != null)
                 {
@@ -797,10 +758,13 @@ namespace PRoCon.Core.Remote
             }
             catch (SocketException se)
             {
+                _log.LogError(se, "Socket error during ConnectAsync to {Host}:{Port} — ErrorCode={ErrorCode}",
+                    this.Hostname, this.Port, se.SocketErrorCode);
                 this.Shutdown(se);
             }
             catch (Exception e)
             {
+                _log.LogError(e, "Error during ConnectAsync to {Host}:{Port}", this.Hostname, this.Port);
                 this.Shutdown(e);
             }
         }
@@ -835,6 +799,8 @@ namespace PRoCon.Core.Remote
         {
             try
             {
+                _log.LogInformation("Attempting connection to {Host}:{Port}", this.Hostname, this.Port);
+
                 // Clear this, everything from now on will throw an error.
                 this.IsRequestedShutdown = false;
 
@@ -863,16 +829,19 @@ namespace PRoCon.Core.Remote
             }
             catch (SocketException se)
             {
+                _log.LogError(se, "Socket error during connection attempt to {Host}:{Port}", this.Hostname, this.Port);
                 this.Shutdown(se);
             }
             catch (Exception e)
             {
+                _log.LogError(e, "Error during connection attempt to {Host}:{Port}", this.Hostname, this.Port);
                 this.Shutdown(e);
             }
         }
 
         public void Shutdown(Exception e)
         {
+            _log.LogWarning(e, "Connection shutdown (exception) for {Host}:{Port}", this.Hostname, this.Port);
             this.ShutdownConnection();
 
             // If we're not currently shutdown from an external request
@@ -884,6 +853,8 @@ namespace PRoCon.Core.Remote
 
         public void Shutdown(SocketException se)
         {
+            _log.LogWarning(se, "Connection shutdown (socket error {ErrorCode}) for {Host}:{Port}",
+                se.SocketErrorCode, this.Hostname, this.Port);
             this.ShutdownConnection();
 
             // If we're not currently shutdown from an external request
@@ -895,6 +866,7 @@ namespace PRoCon.Core.Remote
 
         public void Shutdown()
         {
+            _log.LogDebug("Graceful shutdown requested for {Host}:{Port}", this.Hostname, this.Port);
             // We've been asked to shutdown gracefully. We'll do so and supress any errors
             // that occur during the shutdown.
             this.IsRequestedShutdown = true;

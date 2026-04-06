@@ -270,12 +270,7 @@ namespace PRoCon.UI.Views
 
             try
             {
-                var loggerFactory = LoggerFactory.Create(builder =>
-                {
-                    builder.AddConsole();
-                    builder.SetMinimumLevel(LogLevel.Debug);
-                });
-                PRoConLog.Initialize(loggerFactory);
+                PRoCon.Core.Logging.PRoConLogSetup.Initialize(enableConsole: true);
 
                 // Create panel instances
                 _mapListPanel = new MapListPanel();

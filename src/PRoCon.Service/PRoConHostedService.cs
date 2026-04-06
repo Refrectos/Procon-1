@@ -21,6 +21,7 @@ using System.Threading;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using PRoCon.Core;
+using PRoCon.Core.Logging;
 using PRoCon.Core.Remote;
 using Task = System.Threading.Tasks.Task;
 
@@ -51,6 +52,9 @@ namespace PRoCon.Service
                     break;
                 }
             }
+
+            // Initialize file logging (console logging handled by the host)
+            PRoConLogSetup.Initialize(enableConsole: false);
 
             if (PRoConApplication.IsProcessOpen())
             {

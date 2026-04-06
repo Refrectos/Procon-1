@@ -45,12 +45,16 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Timers;
+using Microsoft.Extensions.Logging;
+using PRoCon.Core.Logging;
 using Timer = System.Timers.Timer;
 
 namespace PRoCon.Core.Remote
 {
     public class PRoConClient
     {
+        private static readonly ILogger _log = PRoConLog.CreateLogger("PRoCon.Client");
+
         protected readonly object ConfigSavingLocker = new object();
 
         /// <summary>
@@ -570,6 +574,7 @@ namespace PRoCon.Core.Remote
 
         private void Connection_ConnectionClosed(FrostbiteConnection sender)
         {
+            _log.LogInformation("Connection closed: {Server}", this.HostNamePort);
             State = ConnectionState.Disconnected;
             //sender.PacketReceived -= new FrostbiteConnection.PacketDispatchHandler(Connection_PacketRecieved);
 
@@ -581,6 +586,7 @@ namespace PRoCon.Core.Remote
 
         private void Connection_ConnectionFailure(FrostbiteConnection sender, Exception exception)
         {
+            _log.LogError(exception, "Connection failure: {Server}", this.HostNamePort);
             State = ConnectionState.Error;
 
             //sender.PacketReceived -= new FrostbiteConnection.PacketDispatchHandler(Connection_PacketRecieved);
@@ -593,6 +599,7 @@ namespace PRoCon.Core.Remote
 
         private void Connection_SocketException(FrostbiteConnection sender, SocketException se)
         {
+            _log.LogError(se, "Socket exception on {Server}: ErrorCode={ErrorCode}", this.HostNamePort, se.SocketErrorCode);
             State = ConnectionState.Error;
 
             //sender.PacketReceived -= new FrostbiteConnection.PacketDispatchHandler(Connection_PacketRecieved);
@@ -874,6 +881,8 @@ namespace PRoCon.Core.Remote
 
         private void Game_LoginFailure(FrostbiteClient sender, string strError)
         {
+            _log.LogWarning("Authentication failed for {Server}: {Error}", this.HostNamePort, strError);
+
             if (LoginFailure != null)
             {
                 State = ConnectionState.Error;
@@ -884,6 +893,8 @@ namespace PRoCon.Core.Remote
 
         private void Game_Logout(FrostbiteClient sender)
         {
+            _log.LogInformation("Logged out from {Server}", this.HostNamePort);
+
             if (Logout != null)
             {
                 this.Logout(this);
@@ -892,6 +903,9 @@ namespace PRoCon.Core.Remote
 
         private void Game_Login(FrostbiteClient sender)
         {
+            _log.LogInformation("Authenticated to {Server} | GameType={GameType} | IsPRoConConnection={IsLayer}",
+                this.HostNamePort, Game?.GameType ?? "unknown", IsPRoConConnection);
+
             if (IsGameModModified)
             {
                 if (CurrentServerInfo.GameMod == GameMods.None)
@@ -2032,12 +2046,14 @@ namespace PRoCon.Core.Remote
 
         public void Disconnect()
         {
+            _log.LogInformation("Disconnect requested for {Server}", this.HostNamePort);
             State = ConnectionState.Disconnected;
             ForceDisconnect();
         }
 
         public void ForceDisconnect()
         {
+            _log.LogDebug("ForceDisconnect: {Server}", this.HostNamePort);
             SaveConnectionConfig();
 
             IsLoadingSavingConnectionConfig = true;
@@ -3460,6 +3476,10 @@ namespace PRoCon.Core.Remote
 
         private void PRoConClient_ResponseError(FrostbiteClient sender, Packet originalRequest, string errorMessage)
         {
+            string command = originalRequest.Words.Count > 0 ? originalRequest.Words[0] : "(empty)";
+            _log.LogWarning("Server response error on {Server}: Command={Command} Error={Error}",
+                this.HostNamePort, command, errorMessage);
+
             // Banlist backwards compatability with R11 (Will attempt to get "banList.list 100" which will throw this error)
             if (originalRequest.Words.Count > 0 && String.Compare(originalRequest.Words[0], "banList.list", true) == 0 && String.Compare(errorMessage, "InvalidArguments", true) == 0)
             {

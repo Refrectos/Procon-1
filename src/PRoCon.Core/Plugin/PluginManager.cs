@@ -11,8 +11,10 @@ using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
+using Microsoft.Extensions.Logging;
 using PRoCon.Core.Accounts;
 using PRoCon.Core.Battlemap;
+using PRoCon.Core.Logging;
 using PRoCon.Core.Maps;
 using PRoCon.Core.Players;
 using PRoCon.Core.Plugin.Commands;
@@ -25,6 +27,7 @@ namespace PRoCon.Core.Plugin
 {
     public class PluginManager
     {
+        private static readonly ILogger _log = PRoConLog.CreateLogger("PRoCon.PluginManager");
         public static string PluginsDirectoryName = "Plugins";
 
         #region Private member attributes
@@ -915,6 +918,7 @@ namespace PRoCon.Core.Plugin
 
         private void CompilePlugin(FileInfo pluginFile, string pluginClassName, CSharpCompilationOptions compilationOptions)
         {
+            _log.LogDebug("Compiling plugin {ClassName} from {File}", pluginClassName, pluginFile.FullName);
 
             // 1. Grab the full source of this plugin
             String fullPluginSource = this.BuildPluginSource(pluginFile);
@@ -1017,7 +1021,11 @@ namespace PRoCon.Core.Plugin
 
             string outputAssembly = Path.Combine(PluginBaseDirectory, pluginClassName + ".dll");
 
-            if (File.Exists(outputAssembly) == false) return;
+            if (File.Exists(outputAssembly) == false)
+            {
+                _log.LogWarning("Plugin DLL not found, skipping load: {Assembly}", outputAssembly);
+                return;
+            }
 
             IPRoConPluginInterface pluginRemoteInterface;
 
@@ -1027,6 +1035,7 @@ namespace PRoCon.Core.Plugin
             }
             catch (Exception e)
             {
+                _log.LogError(e, "Failed to load plugin {ClassName} from {Assembly}", pluginClassName, outputAssembly);
                 WritePluginConsole("^1^bFailed to load {0}: {1}", pluginClassName, e.Message);
                 return;
             }
@@ -1050,6 +1059,8 @@ namespace PRoCon.Core.Plugin
 
                 InvokeOnLoaded(pluginClassName, "OnPluginLoadingEnv", pluginEnvironment);
 
+                _log.LogInformation("Plugin loaded: {ClassName} | GameType={GameType} | Sandbox={Sandbox}",
+                    pluginClassName, ProconClient.GameType, blSandboxEnabled);
                 WritePluginConsole("Loading {0}... ^2Loaded", pluginClassName);
 
                 InvokeOnLoaded(pluginClassName, "OnPluginLoaded", ProconClient.HostName, ProconClient.Port.ToString(CultureInfo.InvariantCulture), Assembly.GetExecutingAssembly().GetName().Version.ToString());
@@ -1061,6 +1072,7 @@ namespace PRoCon.Core.Plugin
             }
             catch (Exception e)
             {
+                _log.LogError(e, "Error initializing plugin {ClassName}", pluginClassName);
                 WritePluginConsole("^1^bError initializing {0}: {1}", pluginClassName, e.Message);
             }
         }
@@ -1078,6 +1090,7 @@ namespace PRoCon.Core.Plugin
         {
             try
             {
+                _log.LogInformation("CompilePlugins starting for {Dir}", this.PluginBaseDirectory);
 
                 if (File.Exists(Path.Combine(this.PluginBaseDirectory, "PluginCache.xml")) == true)
                 {
@@ -1089,6 +1102,7 @@ namespace PRoCon.Core.Plugin
                     }
                     catch (Exception e)
                     {
+                        _log.LogWarning(e, "Error loading plugin cache");
                         WritePluginConsole("Error loading plugin cache: {0}", e.Message);
                     }
                 }
@@ -1299,6 +1313,7 @@ namespace PRoCon.Core.Plugin
 
         public void Unload()
         {
+            _log.LogInformation("Unloading all plugins");
             UnassignEventHandler();
 
             this.InvocationTimeoutTimer.Dispose();
@@ -1309,10 +1324,12 @@ namespace PRoCon.Core.Plugin
                 {
                     PluginLoadContext.Unload();
                     PluginLoadContext = null;
+                    _log.LogDebug("Plugin load context unloaded successfully");
                 }
             }
             catch (Exception e)
             {
+                _log.LogError(e, "Failed to unload plugin load context");
                 PluginLoadContext = null;
                 if (ProconClient != null)
                 {

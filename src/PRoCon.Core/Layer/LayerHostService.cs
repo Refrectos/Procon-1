@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PRoCon.Core.Accounts;
+using PRoCon.Core.Logging;
 using PRoCon.Core.Remote;
 using PRoCon.Core.Remote.Layer;
 
@@ -21,6 +22,8 @@ namespace PRoCon.Core.Layer
     /// </summary>
     public class LayerHostService : ILayerInstance, IDisposable
     {
+        private static readonly ILogger _log = PRoConLog.CreateLogger("PRoCon.Layer");
+
         private WebApplication _app;
         private PRoConApplication _application;
         private PRoConClient _client;
@@ -169,20 +172,24 @@ namespace PRoCon.Core.Layer
 
                     if (!_app.StartAsync().Wait(TimeSpan.FromSeconds(10)))
                     {
+                        _log.LogError("Layer timed out starting Kestrel on {Address}:{Port}", BindingAddress, ListeningPort);
                         System.Console.Error.WriteLine("[LayerHostService] Timed out starting Kestrel on {0}:{1}", BindingAddress, ListeningPort);
                         _app = null;
                         return;
                     }
+                    _log.LogInformation("Layer listening on http://{Address}:{Port}/layer", BindingAddress, ListeningPort);
                     System.Console.WriteLine("[LayerHostService] Listening on http://{0}:{1}/layer", BindingAddress, ListeningPort);
                     LayerStarted?.Invoke();
                 }
                 catch (SocketException se)
                 {
+                    _log.LogError(se, "Layer socket error on {Address}:{Port}", BindingAddress, ListeningPort);
                     _app = null;
                     SocketError?.Invoke(se);
                 }
                 catch (Exception ex)
                 {
+                    _log.LogError(ex, "Layer failed to start on {Address}:{Port}", BindingAddress, ListeningPort);
                     _app = null;
                     System.Console.Error.WriteLine($"[LayerHostService] Failed to start: {ex.Message}");
                 }

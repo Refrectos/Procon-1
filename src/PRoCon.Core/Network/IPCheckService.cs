@@ -7,7 +7,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
+using PRoCon.Core.Logging;
 
 namespace PRoCon.Core.Network
 {
@@ -62,6 +64,8 @@ namespace PRoCon.Core.Network
 
     public class IPCheckService : IDisposable
     {
+        private static readonly ILogger _log = PRoConLog.CreateLogger("PRoCon.IPCheckService");
+
         private static readonly HttpClient _httpClient = new HttpClient
         {
             Timeout = TimeSpan.FromSeconds(10)
@@ -87,6 +91,8 @@ namespace PRoCon.Core.Network
                 Directory.CreateDirectory(cacheDirectory);
 
             string dbPath = Path.Combine(cacheDirectory, "ipcache.db");
+            _log.LogInformation("IPCheckService initializing | DB={DbPath} | HasApiKey={HasKey}", dbPath, !string.IsNullOrEmpty(apiKey));
+
             _conn = new SqliteConnection($"Data Source={dbPath}");
             _conn.Open();
 
@@ -95,6 +101,7 @@ namespace PRoCon.Core.Network
 
             InitializeDatabase();
             LoadQueryCount();
+            _log.LogDebug("IPCheckService ready | DailyQueriesUsed={Used}/{Limit}", _dailyQueries, DailyQueryLimit);
         }
 
         public string ApiKey
@@ -187,11 +194,15 @@ namespace PRoCon.Core.Network
                         _dailyQueries++;
                         SaveQueryCount();
                     }
+
+                    _log.LogDebug("IP lookup: {IP} | Proxy={IsProxy} VPN={IsVPN} Risk={Risk} | Queries={Used}/{Limit}",
+                        ip, result.IsProxy, result.IsVPN, result.Risk, _dailyQueries, DailyQueryLimit);
                 }
                 return result;
             }
-            catch
+            catch (Exception ex)
             {
+                _log.LogWarning(ex, "IP lookup failed for {IP}, returning cached result", ip);
                 return dbResult ?? cached;
             }
             finally
@@ -208,13 +219,19 @@ namespace PRoCon.Core.Network
 
             var response = await _httpClient.GetAsync(url);
             if (!response.IsSuccessStatusCode)
+            {
+                _log.LogWarning("ProxyCheck API returned {StatusCode} for {IP}", response.StatusCode, ip);
                 return null;
+            }
 
             string json = await response.Content.ReadAsStringAsync();
             var root = JObject.Parse(json);
 
             if (root["status"]?.ToString() != "ok")
+            {
+                _log.LogWarning("ProxyCheck API returned non-ok status for {IP}: {Status}", ip, root["status"]);
                 return null;
+            }
 
             var ipData = root[ip] as JObject;
             if (ipData == null)

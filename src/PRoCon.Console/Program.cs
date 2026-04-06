@@ -1,7 +1,9 @@
 using System;
 using System.Net.Sockets;
 using System.Threading;
+using Microsoft.Extensions.Logging;
 using PRoCon.Core;
+using PRoCon.Core.Logging;
 using PRoCon.Core.Remote;
 
 namespace PRoCon.Console
@@ -19,6 +21,10 @@ namespace PRoCon.Console
                     break;
                 }
             }
+
+            // Initialize file + console logging before anything else
+            PRoConLogSetup.Initialize(enableConsole: true);
+            var logger = PRoConLog.CreateLogger("PRoCon.Console");
 
             int connectionInterrupts = 0;
             int maxConnectionInterrupts = 5;

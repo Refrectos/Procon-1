@@ -28,6 +28,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml;
 using MaxMind;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace PRoCon.Core
@@ -36,6 +37,7 @@ namespace PRoCon.Core
     using Core.Battlemap;
     using Core.Events;
     using Core.Localization;
+    using Core.Logging;
     using Core.Options;
     using Core.Players.Items;
     using Core.Remote;
@@ -46,6 +48,8 @@ namespace PRoCon.Core
 
     public class PRoConApplication
     {
+        private static readonly ILogger _log = PRoConLog.CreateLogger("PRoCon.Application");
+
         private readonly object _localizationLock = new object();
 
         public delegate void CurrentLanguageHandler(CLocalization language);
@@ -413,6 +417,8 @@ namespace PRoCon.Core
 
         public PRoConApplication(bool consoleMode, string[] args)
         {
+            _log.LogInformation("Constructing PRoConApplication | ConsoleMode={ConsoleMode} | Args={Args}",
+                consoleMode, args != null ? string.Join(" ", args) : "(none)");
 
             this.LoadingMainConfig = true;
             this.LoadingAccountsFile = true;
@@ -482,6 +488,8 @@ namespace PRoCon.Core
             // TODO: Password change -> Save
 
             ProConPaths.EnsureDirectories();
+            _log.LogDebug("Directories ensured at {DataDir}", ProConPaths.DataDirectory);
+
             this.m_clIpToCountry = new CountryLookup(Path.Combine(ProConPaths.DataDirectory, "GeoIP.dat"));
 
             string ipCacheDir = Path.Combine(ProConPaths.CacheDirectory, "IPCheck");
@@ -509,6 +517,8 @@ namespace PRoCon.Core
 
         public void Execute()
         {
+            _log.LogInformation("Execute() starting — loading configuration");
+
             string jsonPath = Path.Combine(ProConPaths.ConfigsDirectory, "procon.json");
 
             bool migratedFromCfg = false;
@@ -516,13 +526,22 @@ namespace PRoCon.Core
             // Check for v1 import folder before loading config
             if (Config.V1ConfigImporter.HasImportData() && !File.Exists(jsonPath))
             {
+                _log.LogInformation("V1 import data detected, running import");
                 var importResult = Config.V1ConfigImporter.Import();
                 if (importResult.Success)
+                {
+                    _log.LogInformation("V1 config import succeeded: {Result}", importResult.ToString());
                     FrostbiteConnection.LogError("Import", importResult.ToString(), null);
+                }
+                else
+                {
+                    _log.LogWarning("V1 config import failed: {Result}", importResult.ToString());
+                }
             }
 
             if (File.Exists(jsonPath))
             {
+                _log.LogInformation("Loading v2 JSON config from {Path}", jsonPath);
                 // v2 JSON config — single file for accounts + options + servers
                 LoadJsonConfig(jsonPath);
                 this.LoadingAccountsFile = false;
@@ -530,6 +549,7 @@ namespace PRoCon.Core
             }
             else
             {
+                _log.LogInformation("No JSON config found, falling back to legacy .cfg files");
                 // Legacy .cfg fallback (either from Import or pre-existing)
                 this.ExecuteMainConfig("accounts.cfg");
                 this.LoadingAccountsFile = false;
@@ -565,12 +585,17 @@ namespace PRoCon.Core
             // Archive legacy .cfg files after successful migration to JSON
             if (migratedFromCfg)
             {
+                _log.LogInformation("Migrated from legacy .cfg to JSON config");
                 ArchiveLegacyConfig("procon.cfg");
                 ArchiveLegacyConfig("accounts.cfg");
             }
 
             // Pre-compile plugins for all game types on boot
+            _log.LogInformation("Starting background plugin pre-compilation");
             System.Threading.Tasks.Task.Run(() => PreCompileAllPlugins());
+
+            _log.LogInformation("Execute() complete — application is running | Connections={Count}",
+                this.Connections?.Count ?? 0);
         }
 
         private void PreCompileAllPlugins()
@@ -578,7 +603,11 @@ namespace PRoCon.Core
             try
             {
                 string pluginsDir = ProConPaths.PluginsDirectory;
-                if (!Directory.Exists(pluginsDir)) return;
+                if (!Directory.Exists(pluginsDir))
+                {
+                    _log.LogDebug("Plugins directory does not exist: {Dir}", pluginsDir);
+                    return;
+                }
 
                 foreach (string gameTypeDir in Directory.GetDirectories(pluginsDir))
                 {
@@ -586,13 +615,17 @@ namespace PRoCon.Core
                     var csFiles = Directory.GetFiles(gameTypeDir, "*.cs", SearchOption.TopDirectoryOnly);
                     if (csFiles.Length == 0) continue;
 
+                    _log.LogInformation("Pre-compiling {Count} plugin(s) for {GameType}", csFiles.Length, gameType);
                     Plugin.PluginManager.RaisePreCompileOutput($"Pre-compiling {csFiles.Length} plugin(s) for {gameType}...");
 
                     Plugin.PluginManager.PreCompileCheck(gameTypeDir, OptionsSettings?.EnablePluginDebugging == true);
                 }
+
+                _log.LogInformation("Plugin pre-compilation complete");
             }
             catch (Exception ex)
             {
+                _log.LogError(ex, "Plugin pre-compilation failed");
                 Plugin.PluginManager.RaisePreCompileOutput($"^1Pre-compilation failed: {ex.Message}");
             }
         }
@@ -614,12 +647,14 @@ namespace PRoCon.Core
 
         private void Connections_ConnectionAdded(PRoConClient item)
         {
+            _log.LogInformation("Connection added: {Server}", item.HostNamePort);
             this.SaveMainConfig();
             item.AutomaticallyConnectChanged += new PRoConClient.AutomaticallyConnectHandler(item_AutomaticallyConnectChanged);
         }
 
         private void Connections_ConnectionRemoved(PRoConClient item)
         {
+            _log.LogInformation("Connection removed: {Server}", item.HostNamePort);
             item.AutomaticallyConnectChanged -= new PRoConClient.AutomaticallyConnectHandler(item_AutomaticallyConnectChanged);
             this.SaveMainConfig();
             item.ForceDisconnect();
@@ -681,11 +716,17 @@ namespace PRoCon.Core
 
             if (this.Connections.Contains(strHost + ":" + iu16Port.ToString()) == false && this.Connections.Count < this.MaxGspServers)
             {
+                _log.LogInformation("Adding server connection {Host}:{Port} (user={User})", strHost, iu16Port, strUsername);
                 prcNewClient = new PRoConClient(this, strHost, iu16Port, strUsername, strPassword);
 
                 this.Connections.Add(prcNewClient);
 
                 this.SaveMainConfig();
+            }
+            else
+            {
+                _log.LogWarning("Connection not added: {Host}:{Port} — already exists or max servers ({Max}) reached",
+                    strHost, iu16Port, this.MaxGspServers);
             }
 
             return prcNewClient;
@@ -946,9 +987,14 @@ namespace PRoCon.Core
         {
             try
             {
+                _log.LogInformation("Loading JSON config from {Path}", path);
                 string json = File.ReadAllText(path, Encoding.UTF8);
                 var config = JsonConvert.DeserializeObject<ProConConfig>(json);
-                if (config == null) return;
+                if (config == null)
+                {
+                    _log.LogWarning("JSON config deserialized to null");
+                    return;
+                }
 
                 // Window
                 this.SavedWindowState = config.Window.State;
@@ -1000,6 +1046,9 @@ namespace PRoCon.Core
                 }
 
                 // Servers
+                _log.LogInformation("Config loaded: {AccountCount} account(s), {ServerCount} server(s)",
+                    config.Accounts?.Count ?? 0, config.Servers?.Count ?? 0);
+
                 foreach (var srv in config.Servers)
                 {
                     var connection = this.AddConnection(srv.Host, srv.Port, srv.Username, ConfigCrypto.Decrypt(srv.Password));
@@ -1014,6 +1063,7 @@ namespace PRoCon.Core
             }
             catch (Exception e)
             {
+                _log.LogError(e, "Failed to load JSON config from {Path}", path);
                 FrostbiteConnection.LogError("LoadJsonConfig", String.Empty, e);
             }
         }
@@ -3035,6 +3085,7 @@ namespace PRoCon.Core
 
         public void Shutdown()
         {
+            _log.LogInformation("Shutdown() initiated — disconnecting {Count} server(s)", this.Connections?.Count ?? 0);
 
             this.Checker.Dispose();
             this.IPCheckService?.Dispose();
@@ -3044,11 +3095,14 @@ namespace PRoCon.Core
 
             foreach (PRoConClient pcClient in this.Connections)
             {
+                _log.LogDebug("Disconnecting {Server}", pcClient.HostNamePort);
                 pcClient.StopSound(default(PRoConClient.SPlaySound));
                 pcClient.ForceDisconnect();
                 pcClient.Destroy();
             }
 
+            _log.LogInformation("=== PRoCon session ended ===");
+            Logging.PRoConLogSetup.Shutdown();
         }
     }
 }
