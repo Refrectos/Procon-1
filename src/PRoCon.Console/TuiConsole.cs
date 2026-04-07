@@ -291,6 +291,17 @@ namespace PRoCon.Console
 
         private void WireKeyHandlers()
         {
+            // F10 is intercepted by Terminal.Gui at the application level
+            // (menu bar activation), so handle it there instead of on the window
+            Application.KeyDown += (s, key) =>
+            {
+                if (key.KeyCode == KeyCode.F10)
+                {
+                    DoQuit();
+                    key.Handled = true;
+                }
+            };
+
             _mainWindow.KeyDown += (s, key) =>
             {
                 switch (key.KeyCode)
@@ -322,10 +333,6 @@ namespace PRoCon.Console
                         break;
                     case KeyCode.F9:
                         ToggleDashboard();
-                        key.Handled = true;
-                        break;
-                    case KeyCode.F10:
-                        DoQuit();
                         key.Handled = true;
                         break;
                     case KeyCode.CursorLeft | KeyCode.CtrlMask:

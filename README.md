@@ -71,6 +71,7 @@ EZSCALE needed to upgrade their MySQL infrastructure and the legacy PRoCon codeb
 | Plugin Compiler | CodeDom | Roslyn (C# latest) |
 | Config Format | `procon.cfg` (plaintext) | `procon.json` (AES-256 encrypted passwords) |
 | IP Checking | None | ProxyCheck.io v3 (SQLite cache) |
+| Console Mode | Basic text output | Terminal.Gui TUI (panels, F-keys, live updates) |
 | Distribution | 50+ loose DLLs | Single-file executable (~77MB) |
 
 ## Download
@@ -81,8 +82,8 @@ Download the latest release from the [Releases](https://github.com/AdKats/Procon
 |----------|------|
 | Windows GUI | `PRoCon.UI.exe` (self-contained, no .NET install needed) |
 | Linux GUI | `PRoCon.UI` (self-contained) |
-| Windows Headless | `PRoCon.Console.exe` (for servers, no GUI) |
-| Linux Headless | `PRoCon.Console` (for servers/Docker) |
+| Windows Console | `PRoCon.Console.exe` (TUI admin interface, no GUI) |
+| Linux Console | `PRoCon.Console` (TUI admin interface, for servers/Docker) |
 
 ## Building from Source
 
@@ -112,11 +113,65 @@ docker compose up -d
 # Data volume: ./data/ → /config/ (Configs, Plugins, Logs, Cache)
 ```
 
-### Headless (CLI)
+### Console (TUI)
+
+PRoCon.Console launches a full terminal admin interface (TUI) built with [Terminal.Gui](https://github.com/gui-cs/Terminal.Gui). It provides a multi-panel layout with live-updating player list, chat, kill feed, and server info — all keyboard-driven.
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│ PRoCon TUI   [▸ Server 1: BF4 ★]  [  Server 2: BF3  ]   Connected 2/2│
+├───────────────────────────────────┬─────────────────────────────────────┤
+│ Players (32/64)                   │ Server Info                        │
+│ ── Team 1: US (450 tickets) ──── │ Map: MP_Siege / ConquestLarge0     │
+│  1. PlayerOne      K:12 D:3  25ms│ Round: 1/2                         │
+│ >2. SuspiciousGuy  K:45 D:1  15ms│─────────────────────────────────────│
+│ ── Team 2: RU (380 tickets) ──── │ Kill Feed                          │
+│  3. VeteranPro     K:8  D:6  30ms│ PlayerOne [AEK-971] SuspiciousGuy  │
+├───────────────────────────────────┴─────────────────────────────────────┤
+│ Chat                                                                    │
+│ [All] PlayerOne: anyone else getting lag?                               │
+│ [Team1] SuspiciousGuy: rush B                                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│ F1:Kill F2:Kick F3:Ban F4:Say F5:Yell F6:Raw  F9:Dashboard  F10:Quit  │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**Keyboard shortcuts:**
+
+| Key | Action |
+|-----|--------|
+| Arrow keys | Navigate player list |
+| F1 | Kill selected player |
+| F2 | Kick selected player (prompts for reason) |
+| F3 | Ban selected player (prompts for reason + confirmation) |
+| F4 | Say message to all players |
+| F5 | Yell message to all players |
+| F6 | Send raw RCON command |
+| F9 | Toggle multi-server dashboard overview |
+| F10 | Quit |
+| Ctrl+Left/Right | Switch between servers |
+| Esc | Return focus to player list / exit dashboard |
 
 ```bash
-./PRoCon.Console                              # uses default data directory
-./PRoCon.Console --datadir /opt/procon/data   # custom data path
+# Launch with TUI (default)
+./PRoCon.Console
+
+# Connect to a specific server
+./PRoCon.Console --rcon-host 1.2.3.4 --rcon-port 47200 --rcon-pass secret
+
+# Headless mode (no TUI, for Docker/scripts/piping)
+./PRoCon.Console --no-interactive
+
+# Custom data directory
+./PRoCon.Console --datadir /opt/procon/data
+```
+
+Environment variables are also supported for headless/Docker use:
+
+```bash
+PROCON_RCON_HOST=1.2.3.4
+PROCON_RCON_PORT=47200
+PROCON_RCON_PASS=secret
 ```
 
 ## Data Directory
@@ -242,7 +297,7 @@ See the full SDK template and developer guide in [`pluginsdk/`](pluginsdk/).
 | `PRoCon.UI` | Avalonia GUI application |
 | `PRoCon.Core` | Core business logic, plugin system, RCON protocol |
 | `PRoCon.Themes` | Dark/light theme resources |
-| `PRoCon.Console` | Headless console application |
+| `PRoCon.Console` | Terminal UI (TUI) admin interface + headless mode |
 | `PRoCon.Service` | Windows Service / Linux systemd wrapper |
 
 Key technologies: .NET 8, Avalonia 11, SignalR (layer system), Roslyn (plugin compilation), Dapper + SQLite (caching), Kestrel (layer hosting).
