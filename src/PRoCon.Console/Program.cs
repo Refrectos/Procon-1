@@ -22,8 +22,9 @@ namespace PRoCon.Console
                 }
             }
 
-            // Initialize file + console logging before anything else
-            PRoConLogSetup.Initialize(enableConsole: true);
+            // Initialize logging — disable console output when TUI is active
+            bool interactive = !HasFlag(args, "--no-interactive");
+            PRoConLogSetup.Initialize(enableConsole: !interactive);
             var logger = PRoConLog.CreateLogger("PRoCon.Console");
 
             int connectionInterrupts = 0;
@@ -51,17 +52,20 @@ namespace PRoCon.Console
                 {
                     application = new PRoConApplication(true, args);
 
-                    System.Console.WriteLine("PRoCon Frostbite v2.0");
-                    System.Console.WriteLine("=====================");
-                    System.Console.WriteLine("Headless console mode for servers and containers.");
-                    System.Console.WriteLine($"Data directory: {ProConPaths.DataDirectory}");
-                    if (ProConPaths.IsContainer)
-                        System.Console.WriteLine("Container detected — using /config/");
-                    System.Console.WriteLine("Flags:");
-                    System.Console.WriteLine("  --rcon-host <ip> --rcon-port <port> --rcon-pass <pass>");
-                    System.Console.WriteLine("  --layer-enable --layer-port <port>");
-                    System.Console.WriteLine("  --datadir <path>  --interactive / -i");
-                    System.Console.WriteLine();
+                    if (!interactive)
+                    {
+                        System.Console.WriteLine("PRoCon Frostbite v2.0");
+                        System.Console.WriteLine("=====================");
+                        System.Console.WriteLine("Headless console mode for servers and containers.");
+                        System.Console.WriteLine($"Data directory: {ProConPaths.DataDirectory}");
+                        if (ProConPaths.IsContainer)
+                            System.Console.WriteLine("Container detected — using /config/");
+                        System.Console.WriteLine("Flags:");
+                        System.Console.WriteLine("  --rcon-host <ip> --rcon-port <port> --rcon-pass <pass>");
+                        System.Console.WriteLine("  --layer-enable --layer-port <port>");
+                        System.Console.WriteLine("  --datadir <path>  --interactive / -i");
+                        System.Console.WriteLine();
+                    }
 
                     application.Execute();
 
@@ -93,8 +97,7 @@ namespace PRoCon.Console
                         }
                     }
 
-                    // Interactive console mode (on by default, --no-interactive to disable)
-                    bool interactive = !HasFlag(args, "--no-interactive");
+                    // Interactive TUI mode (on by default, --no-interactive to disable)
                     if (interactive)
                     {
                         var tuiConsole = new TuiConsole(application, exitEvent);
