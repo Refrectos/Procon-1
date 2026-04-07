@@ -1,16 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using Avalonia.Controls;
-using Avalonia.Controls.Shapes;
 using Avalonia.Interactivity;
-using Avalonia.Media;
-using Avalonia.Threading;
 using PRoCon.Core;
 using PRoCon.Core.Remote;
-using PRoCon.Core.Updates;
 
 namespace PRoCon.UI.Views
 {
@@ -24,9 +18,9 @@ namespace PRoCon.UI.Views
         public Action OnForceUpdateCheck { get; set; }
 
         /// <summary>
-        /// Callback set by MainWindow to fetch recent releases for the changelog.
+        /// Callback set by MainWindow to open the What's New dialog.
         /// </summary>
-        public Func<Task<List<UpdateInfo>>> OnGetRecentReleases { get; set; }
+        public Action OnOpenWhatsNewDialog { get; set; }
 
         public OptionsPanel()
         {
@@ -111,8 +105,6 @@ namespace PRoCon.UI.Views
                 dataDirText.Text = $"Data: {ProConPaths.DataDirectory}";
             }
 
-            // Auto-load changelog
-            OnRefreshChangelog(null, null);
         }
 
         // --- UI Actions ---
@@ -188,58 +180,9 @@ namespace PRoCon.UI.Views
                     : "API key saved. Using paid tier.";
         }
 
-        private async void OnRefreshChangelog(object sender, RoutedEventArgs e)
+        private void OnOpenWhatsNew(object sender, RoutedEventArgs e)
         {
-            var changelogText = this.FindControl<TextBlock>("ChangelogText");
-            if (changelogText == null) return;
-
-            if (OnGetRecentReleases == null)
-            {
-                changelogText.Text = "Changelog not available.";
-                return;
-            }
-
-            changelogText.Text = "Loading...";
-
-            try
-            {
-                var releases = await OnGetRecentReleases();
-                if (releases == null || releases.Count == 0)
-                {
-                    changelogText.Text = "No releases found.";
-                    return;
-                }
-
-                var sb = new System.Text.StringBuilder();
-                foreach (var release in releases)
-                {
-                    string label = release.IsPreRelease ? " (pre-release)" : "";
-                    sb.AppendLine($"═══ {release.Version}{label} — {release.PublishedAt:yyyy-MM-dd} ═══");
-                    sb.AppendLine();
-
-                    // Clean up GitHub markdown for plain text display
-                    string body = release.Body;
-                    if (!string.IsNullOrWhiteSpace(body))
-                    {
-                        // Strip markdown links [text](url) -> text
-                        body = System.Text.RegularExpressions.Regex.Replace(body, @"\[([^\]]+)\]\([^)]+\)", "$1");
-                        // Strip ** bold markers
-                        body = body.Replace("**", "");
-                        sb.AppendLine(body.Trim());
-                    }
-                    else
-                    {
-                        sb.AppendLine("No release notes.");
-                    }
-                    sb.AppendLine();
-                }
-
-                changelogText.Text = sb.ToString().TrimEnd();
-            }
-            catch (Exception ex)
-            {
-                changelogText.Text = $"Failed to load changelog: {ex.Message}";
-            }
+            OnOpenWhatsNewDialog?.Invoke();
         }
 
         private void OnCheckForUpdates(object sender, RoutedEventArgs e)

@@ -287,7 +287,7 @@ namespace PRoCon.UI.Views
                 _textChatModerationPanel = new TextChatModerationPanel();
                 _optionsPanel = new OptionsPanel();
                 _optionsPanel.OnForceUpdateCheck = () => _updateChecker?.ForceCheck();
-                _optionsPanel.OnGetRecentReleases = () => _updateChecker?.GetRecentReleasesAsync() ?? System.Threading.Tasks.Task.FromResult(new System.Collections.Generic.List<PRoCon.Core.Updates.UpdateInfo>());
+                _optionsPanel.OnOpenWhatsNewDialog = () => OnWhatsNewClick(null, null);
             }
             catch (Exception ex)
             {
