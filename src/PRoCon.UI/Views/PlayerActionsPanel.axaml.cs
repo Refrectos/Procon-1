@@ -68,6 +68,17 @@ namespace PRoCon.UI.Views
                 SetText("PlayerScoreText", p.ScoreText);
                 SetText("PlayerKDText", $"{p.Kills}/{p.Deaths}");
                 SetText("PlayerPingText", p.PingText);
+                // Color the ping stat value
+                var pingStatValue = this.FindControl<TextBlock>("PlayerPingText");
+                if (pingStatValue != null)
+                {
+                    if (p.Ping <= 50)
+                        pingStatValue.Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#81c784"));
+                    else if (p.Ping <= 120)
+                        pingStatValue.Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#ffd740"));
+                    else
+                        pingStatValue.Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#ef5350"));
+                }
                 SetText("PlayerSquadText", p.SquadText);
                 SetText("PlayerIPText", p.IP ?? "");
                 SetText("PlayerCountryText", p.CountryText);
