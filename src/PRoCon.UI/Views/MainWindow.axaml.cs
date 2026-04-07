@@ -125,6 +125,11 @@ namespace PRoCon.UI.Views
         private Button _autoConnectButton;
         private Button _editServerButton;
         private Button _removeServerButton;
+        private Border[] _ticketBars;
+        private TextBlock[] _ticketCounts;
+        private Button _viewByScoreBtn;
+        private Button _viewBySquadBtn;
+        private TextBlock _playerCountSummary;
         private TextBlock _connectionCountText;
         private TextBlock _landingServerCount;
         private TextBlock _landingConnectedCount;
@@ -207,6 +212,16 @@ namespace PRoCon.UI.Views
             _autoConnectButton = this.FindControl<Button>("AutoConnectButton");
             _editServerButton = this.FindControl<Button>("EditServerButton");
             _removeServerButton = this.FindControl<Button>("RemoveServerButton");
+            _ticketBars = new Border[4];
+            _ticketCounts = new TextBlock[4];
+            for (int t = 0; t < 4; t++)
+            {
+                _ticketBars[t] = this.FindControl<Border>($"TicketBar{t + 1}");
+                _ticketCounts[t] = this.FindControl<TextBlock>($"TicketCount{t + 1}");
+            }
+            _viewByScoreBtn = this.FindControl<Button>("ViewByScoreBtn");
+            _viewBySquadBtn = this.FindControl<Button>("ViewBySquadBtn");
+            _playerCountSummary = this.FindControl<TextBlock>("PlayerCountSummary");
             _connectionCountText = this.FindControl<TextBlock>("ConnectionCountText");
             _landingServerCount = this.FindControl<TextBlock>("LandingServerCount");
             _landingConnectedCount = this.FindControl<TextBlock>("LandingConnectedCount");
@@ -2651,7 +2666,10 @@ namespace PRoCon.UI.Views
                 if (_teamLists[t] != null)
                 {
                     _teamLists[t].ItemsSource = null;
-                    _teamLists[t].ItemsSource = players;
+                    if (entry.GroupBySquad)
+                        _teamLists[t].ItemsSource = players.OrderBy(p => p.Squad).ThenByDescending(p => p.Score).ToList();
+                    else
+                        _teamLists[t].ItemsSource = players;
 
                     // Restore selections by name
                     if (selectedNames.Count > 0)
@@ -2661,7 +2679,22 @@ namespace PRoCon.UI.Views
                 }
 
                 if (_teamHeaders[t] != null)
-                    _teamHeaders[t].Text = $"Team {t + 1} ({players.Count})";
+                {
+                    string teamName = entry.TeamNames.TryGetValue(t + 1, out var tn) ? tn : $"Team {t + 1}";
+                    _teamHeaders[t].Text = $"{teamName} ({players.Count})";
+                }
+
+                if (_ticketCounts != null && _ticketCounts[t] != null)
+                {
+                    int tickets = entry.TeamTickets.TryGetValue(t + 1, out var tk) ? tk : 0;
+                    _ticketCounts[t].Text = tickets > 0 ? tickets.ToString("N0") : "";
+                }
+                if (_ticketBars != null && _ticketBars[t] != null && entry.TargetTickets > 0)
+                {
+                    int tickets = entry.TeamTickets.TryGetValue(t + 1, out var tk2) ? tk2 : 0;
+                    double pct = System.Math.Clamp((double)tickets / entry.TargetTickets, 0, 1);
+                    _ticketBars[t].Width = pct * 50;
+                }
 
                 // Show teams 3 and 4 only if they have players
                 if (t >= 2 && _teamPanels[t] != null)
@@ -2697,6 +2730,16 @@ namespace PRoCon.UI.Views
                 _commanderHeader.Text = $"Commanders ({entry.Commanders.Count})";
             if (_commanderPanel != null)
                 _commanderPanel.IsVisible = entry.Commanders.Count > 0;
+
+            // Player count summary
+            if (_playerCountSummary != null)
+            {
+                int total = 0;
+                for (int t = 1; t <= 4; t++)
+                    total += entry.TeamPlayers.ContainsKey(t) ? entry.TeamPlayers[t].Count : 0;
+                total += entry.Spectators.Count + entry.Commanders.Count;
+                _playerCountSummary.Text = $"{total}/{entry.MaxPlayerCount} players";
+            }
         }
 
         private void RefreshPlayerList()
@@ -2797,10 +2840,56 @@ namespace PRoCon.UI.Views
             TopLevel.GetTopLevel(this)?.Clipboard?.SetTextAsync(player.Name);
         }
 
-        private async void OnPlayerCopyGUID(object sender, RoutedEventArgs e) { }
+        private void OnViewByScore(object sender, RoutedEventArgs e)
+        {
+            if (_selectedServer == null) return;
+            _selectedServer.GroupBySquad = false;
+            UpdateViewToggleButtons();
+            UpdateTeamPanels(_selectedServer);
+        }
 
-        private void OnViewByScore(object sender, RoutedEventArgs e) { }
+        private void OnViewBySquad(object sender, RoutedEventArgs e)
+        {
+            if (_selectedServer == null) return;
+            _selectedServer.GroupBySquad = true;
+            UpdateViewToggleButtons();
+            UpdateTeamPanels(_selectedServer);
+        }
 
-        private void OnViewBySquad(object sender, RoutedEventArgs e) { }
+        private void UpdateViewToggleButtons()
+        {
+            bool bySquad = _selectedServer?.GroupBySquad ?? false;
+            if (_viewByScoreBtn != null)
+            {
+                _viewByScoreBtn.Background = (Avalonia.Media.IBrush)(bySquad
+                    ? FindThemeBrush("ButtonSecondaryBrush") : FindThemeBrush("PrimaryBrush"));
+                _viewByScoreBtn.Foreground = (Avalonia.Media.IBrush)(bySquad
+                    ? FindThemeBrush("TextSecondaryBrush") : FindThemeBrush("BackgroundBrush"));
+            }
+            if (_viewBySquadBtn != null)
+            {
+                _viewBySquadBtn.Background = (Avalonia.Media.IBrush)(bySquad
+                    ? FindThemeBrush("PrimaryBrush") : FindThemeBrush("ButtonSecondaryBrush"));
+                _viewBySquadBtn.Foreground = (Avalonia.Media.IBrush)(bySquad
+                    ? FindThemeBrush("BackgroundBrush") : FindThemeBrush("TextSecondaryBrush"));
+            }
+        }
+
+        private object FindThemeBrush(string name)
+        {
+            if (this.TryFindResource(name, this.ActualThemeVariant, out object brush))
+                return brush;
+            return Avalonia.Media.Brushes.Gray;
+        }
+
+        private async void OnPlayerCopyGUID(object sender, RoutedEventArgs e)
+        {
+            var player = GetPlayerFromMenuContext(sender);
+            if (player == null || string.IsNullOrEmpty(player.GUID)) return;
+
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel?.Clipboard != null)
+                await topLevel.Clipboard.SetTextAsync(player.GUID);
+        }
     }
 }
