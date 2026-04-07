@@ -454,6 +454,9 @@ namespace PRoCon.UI.Views
                     _updateChecker = new PRoCon.Core.Updates.UpdateChecker(infoVersion, includePreReleases: isAlphaChannel);
                     _updateChecker.UpdateAvailable += OnUpdateAvailable;
                     _updateChecker.StartPeriodicCheck();
+                    // Show What's New dialog after a short delay if version is newer than dismissed
+                    Avalonia.Threading.DispatcherTimer.RunOnce(() => ShowWhatsNewIfNeeded(),
+                        TimeSpan.FromSeconds(2));
                 }
                 catch { /* Update checker init failure must not block startup */ }
             }
@@ -561,6 +564,60 @@ namespace PRoCon.UI.Views
                 _updateBanner.IsVisible = true;
             if (_updateBannerText != null)
                 _updateBannerText.Text = message;
+        }
+
+        // --- What's New ---
+
+        private async void ShowWhatsNewIfNeeded()
+        {
+            if (_updateChecker == null) return;
+
+            try
+            {
+                string dismissed = _application?.OptionsSettings?.DismissedChangelogVersion ?? "";
+                bool shouldShow = string.IsNullOrEmpty(dismissed);
+
+                if (!shouldShow && PRoCon.Core.Updates.SemanticVersion.TryParse(_appVersion, out var current)
+                    && PRoCon.Core.Updates.SemanticVersion.TryParse(dismissed, out var dismissedVer))
+                {
+                    shouldShow = current > dismissedVer;
+                }
+
+                if (!shouldShow) return;
+
+                var releases = await _updateChecker.GetRecentReleasesAsync();
+                if (releases == null || releases.Count == 0) return;
+
+                var dialog = new WhatsNewDialog(releases, _appVersion)
+                {
+                    IsFirstShow = true,
+                    OnDismiss = () =>
+                    {
+                        if (_application?.OptionsSettings != null)
+                            _application.OptionsSettings.DismissedChangelogVersion = _appVersion;
+                    }
+                };
+                await dialog.ShowDialog(this);
+            }
+            catch { }
+        }
+
+        private async void OnWhatsNewClick(object sender, Avalonia.Input.PointerPressedEventArgs e)
+        {
+            if (_updateChecker == null) return;
+
+            try
+            {
+                var releases = await _updateChecker.GetRecentReleasesAsync();
+                if (releases == null || releases.Count == 0) return;
+
+                var dialog = new WhatsNewDialog(releases, _appVersion)
+                {
+                    IsFirstShow = false
+                };
+                await dialog.ShowDialog(this);
+            }
+            catch { }
         }
 
         private void OnUpdateInstall(object sender, RoutedEventArgs e)
@@ -1033,7 +1090,12 @@ namespace PRoCon.UI.Views
                 }
             });
 
-            game.ListPlayers += (sender, players, subset) => Dispatcher.UIThread.Post(() =>
+            game.ListPlayers += (sender, players, subset) =>
+            {
+                // Snapshot the collection immediately on the event-raising thread
+                // to avoid "collection was modified" if the network layer mutates it later
+                var playerSnapshot = players.ToList();
+                Dispatcher.UIThread.Post(() =>
             {
                 // Clear all teams, spectators, commanders
                 for (int t = 1; t <= 4; t++)
@@ -1046,7 +1108,7 @@ namespace PRoCon.UI.Views
                 entry.PlayerLookup.Clear();
 
                 // Sort players into teams, spectators, or commanders
-                foreach (var player in players)
+                foreach (var player in playerSnapshot)
                 {
                     var display = new PlayerDisplayInfo
                     {
@@ -1097,13 +1159,14 @@ namespace PRoCon.UI.Views
 
                 // Also keep flat list for backward compat
                 var items = new List<string>();
-                foreach (var player in players)
+                foreach (var player in playerSnapshot)
                     items.Add($"{player.SoldierName}  —  Score: {player.Score}  K/D: {player.Kills}/{player.Deaths}  Squad: {player.SquadID}  Team: {player.TeamID}");
                 entry.PlayerItems = items;
 
                 if (_selectedServer == entry)
                     UpdateTeamPanels(entry);
             });
+            };
         }
 
         // --- Tab Switching ---

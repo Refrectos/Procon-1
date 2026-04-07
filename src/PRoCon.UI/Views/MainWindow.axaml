@@ -211,12 +211,16 @@
           <TextBlock Name="ConnectionCountText" Text="0 connections"
                      Foreground="{DynamicResource TextSecondaryBrush}" FontSize="9" />
         </StackPanel>
-        <TextBlock DockPanel.Dock="Right"
-                   Foreground="{DynamicResource TextDisabledBrush}" FontSize="9"
-                   HorizontalAlignment="Right" VerticalAlignment="Center">
-          <Run Text="PRoCon" /><Run Text=" " />
-          <Run x:Name="VersionRun" Text="" Foreground="{DynamicResource TextSecondaryBrush}" />
-        </TextBlock>
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="12"
+                    VerticalAlignment="Center">
+          <TextBlock Name="WhatsNewLink" Text="What's New" FontSize="9"
+                     Foreground="{DynamicResource TextSecondaryBrush}"
+                     Cursor="Hand" PointerPressed="OnWhatsNewClick" />
+          <TextBlock Foreground="{DynamicResource TextDisabledBrush}" FontSize="9">
+            <Run Text="PRoCon" /><Run Text=" " />
+            <Run x:Name="VersionRun" Text="" Foreground="{DynamicResource TextSecondaryBrush}" />
+          </TextBlock>
+        </StackPanel>
       </DockPanel>
     </Border>
 
