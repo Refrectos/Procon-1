@@ -1,0 +1,56 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PRoCon.UI.Views.WhatsNewDialog"
+        x:CompileBindings="False"
+        Title="What's New in PRoCon"
+        Width="650" Height="500"
+        MinWidth="500" MinHeight="350"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BackgroundBrush}">
+
+  <DockPanel>
+    <!-- Bottom bar -->
+    <Border DockPanel.Dock="Bottom" Background="{DynamicResource SurfaceBrush}"
+            Padding="16,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0">
+      <DockPanel>
+        <CheckBox DockPanel.Dock="Left" Name="DontShowCheck"
+                  Content="Don't show on startup"
+                  Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11"
+                  IsVisible="False" />
+        <Button DockPanel.Dock="Right" Content="Got it" HorizontalAlignment="Right"
+                Background="{DynamicResource ButtonPrimaryBrush}"
+                Foreground="{DynamicResource ButtonPrimaryTextBrush}"
+                Padding="20,8" CornerRadius="4"
+                Click="OnGotIt" />
+        <Panel />
+      </DockPanel>
+    </Border>
+
+    <!-- Header -->
+    <Border DockPanel.Dock="Top" Padding="20,16" Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
+      <TextBlock Text="What's New in PRoCon" FontSize="18" FontWeight="SemiBold"
+                 Foreground="{DynamicResource PrimaryBrush}" />
+    </Border>
+
+    <!-- Split panel -->
+    <Grid ColumnDefinitions="200,1,*">
+
+      <!-- Left: Version list -->
+      <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}" Padding="0">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+          <StackPanel Name="VersionList" Spacing="0" />
+        </ScrollViewer>
+      </Border>
+
+      <!-- Divider -->
+      <Border Grid.Column="1" Background="{DynamicResource BorderBrush}" />
+
+      <!-- Right: Release notes -->
+      <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" Padding="20,16">
+        <StackPanel Name="ReleaseNotesPanel" Spacing="8" />
+      </ScrollViewer>
+
+    </Grid>
+  </DockPanel>
+</Window>
