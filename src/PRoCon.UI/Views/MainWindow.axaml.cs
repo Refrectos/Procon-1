@@ -1051,6 +1051,29 @@ namespace PRoCon.UI.Views
                 SortAndGroupServers();
                 entry.GameVersion = sender.FriendlyVersionNumber ?? sender.VersionNumber ?? "";
 
+                // Resolve team names from game data
+                var infoClient = GetClient(entry.HostPort);
+                if (infoClient != null && !string.IsNullOrEmpty(info.Map))
+                {
+                    for (int t = 1; t <= 4; t++)
+                    {
+                        string teamName = infoClient.GetLocalizedTeamName(t, info.Map, info.GameMode);
+                        entry.TeamNames[t] = !string.IsNullOrEmpty(teamName) ? teamName : $"Team {t}";
+                    }
+                }
+
+                // Update ticket scores
+                if (info.TeamScores != null)
+                {
+                    foreach (var ts in info.TeamScores)
+                    {
+                        if (ts.TeamID >= 1 && ts.TeamID <= 4)
+                            entry.TeamTickets[ts.TeamID] = ts.Score;
+                    }
+                    if (info.TeamScores.Count > 0 && info.TeamScores[0].WinningScore > 0)
+                        entry.TargetTickets = info.TeamScores[0].WinningScore;
+                }
+
                 // Track player count history
                 entry.PlayerHistory.Add((DateTime.Now, info.PlayerCount));
                 // Keep last 60 minutes of data
@@ -1154,7 +1177,8 @@ namespace PRoCon.UI.Views
                         Ping = player.Ping,
                         Squad = player.SquadID,
                         PlayerType = player.Type,
-                        IsAlive = true // Full sync resets alive state
+                        IsAlive = true, // Full sync resets alive state
+                        GUID = player.GUID ?? ""
                     };
 
                     // Preserve IP/country data from previous refresh
@@ -1166,7 +1190,13 @@ namespace PRoCon.UI.Views
                         display.IsVPN = prev.IsVPN;
                         display.IsProxy = prev.IsProxy;
                         display.FlagImage = prev.FlagImage;
+                        if (string.IsNullOrEmpty(display.GUID) && !string.IsNullOrEmpty(prev.GUID))
+                            display.GUID = prev.GUID;
                     }
+
+                    // Mark new joins for visual feedback
+                    if (!previousLookup.ContainsKey(player.SoldierName))
+                        display.IsNewJoin = true;
 
                     entry.PlayerLookup[player.SoldierName] = display;
 
