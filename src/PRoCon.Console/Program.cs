@@ -97,8 +97,8 @@ namespace PRoCon.Console
                     bool interactive = !HasFlag(args, "--no-interactive");
                     if (interactive)
                     {
-                        var interactiveConsole = new InteractiveConsole(application, exitEvent);
-                        interactiveConsole.Start();
+                        var tuiConsole = new TuiConsole(application, exitEvent);
+                        tuiConsole.Start(); // Calls Application.Run(), blocks until quit
                     }
 
                     // Game server health monitoring (optional, set via env vars)
