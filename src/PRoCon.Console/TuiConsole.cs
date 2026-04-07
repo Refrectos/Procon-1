@@ -316,7 +316,8 @@ namespace PRoCon.Console
                         key.Handled = true;
                         break;
                     case KeyCode.F6:
-                        FocusInputWithPrefix("raw ");
+                        _inputField.Text = "";
+                        _inputField.SetFocus();
                         key.Handled = true;
                         break;
                     case KeyCode.F9:
@@ -337,6 +338,11 @@ namespace PRoCon.Console
                         break;
                     case KeyCode.Esc when _dashboardVisible:
                         ToggleDashboard();
+                        key.Handled = true;
+                        break;
+                    case KeyCode.Esc when _inputField.HasFocus:
+                        _inputField.Text = "";
+                        _playerListView.SetFocus();
                         key.Handled = true;
                         break;
                 }
@@ -364,6 +370,7 @@ namespace PRoCon.Console
                 Application.Invoke(() =>
                 {
                     _servers.Remove(client);
+                    _wiredGames.Remove(client.HostNamePort);
                     if (_activeClient == client)
                         SetActiveServer(_servers.FirstOrDefault());
                     UpdateServerTabBar();
@@ -489,6 +496,15 @@ namespace PRoCon.Console
             if (client.PlayerList != null)
             {
                 client.PlayerList.PlayerAdded += p =>
+                {
+                    Application.Invoke(() =>
+                    {
+                        if (client == _activeClient)
+                            RequestPlayerListRefresh();
+                    });
+                };
+
+                client.PlayerList.PlayerUpdated += p =>
                 {
                     Application.Invoke(() =>
                     {
@@ -863,13 +879,7 @@ namespace PRoCon.Console
                 return;
             }
 
-            int confirm = MessageBox.Query(
-                "Confirm Ban",
-                $"Permanently ban {player.SoldierName}?",
-                "Yes", "No");
-
-            if (confirm != 0) return;
-
+            // Step 1: Reason dialog
             var dialog = new Dialog
             {
                 Title = $"Ban {player.SoldierName}",
@@ -892,13 +902,12 @@ namespace PRoCon.Console
                 Text = "Banned by admin"
             };
 
-            var banBtn = new Button { Text = "Ban" };
+            string capturedReason = null;
+
+            var banBtn = new Button { Text = "Ban Permanently" };
             banBtn.Accepting += (s, e) =>
             {
-                string reason = reasonField.Text?.ToString() ?? "Banned by admin";
-                _activeClient.SendRequest(new List<string> { "banList.add", "name", player.SoldierName, "perm", reason });
-                _activeClient.Game?.SendBanListSavePacket();
-                AppendChat($"[ADMIN] Banned {player.SoldierName}: {reason}");
+                capturedReason = reasonField.Text?.ToString() ?? "Banned by admin";
                 Application.RequestStop();
             };
 
@@ -913,6 +922,20 @@ namespace PRoCon.Console
             dialog.AddButton(cancelBtn);
             Application.Run(dialog);
             dialog.Dispose();
+
+            if (capturedReason == null) return;
+
+            // Step 2: Confirmation
+            int confirm = MessageBox.Query(
+                "Confirm Ban",
+                $"Permanently ban {player.SoldierName}?\nReason: {capturedReason}",
+                "Yes", "No");
+
+            if (confirm != 0) return;
+
+            _activeClient.SendRequest(new List<string> { "banList.add", "name", player.SoldierName, "perm", capturedReason });
+            _activeClient.Game?.SendBanListSavePacket();
+            AppendChat($"[ADMIN] Banned {player.SoldierName}: {capturedReason}");
         }
 
         private void DoQuit()
