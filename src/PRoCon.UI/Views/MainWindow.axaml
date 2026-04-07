@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:models="clr-namespace:PRoCon.UI.Models"
         x:Class="PRoCon.UI.Views.MainWindow"
         x:CompileBindings="False"
         Title="PRoCon Frostbite"
@@ -71,6 +72,36 @@
       <Setter Property="Background" Value="{DynamicResource TabHoverBrush}" />
     </Style>
   </Window.Styles>
+
+  <Window.DataTemplates>
+    <!-- Auto-matched templates for squad-grouped view (when ItemTemplate is null) -->
+    <DataTemplate DataType="models:SquadHeaderItem">
+      <Border Background="#1a1a2a" Padding="6,3" Margin="0,4,0,0" CornerRadius="2">
+        <TextBlock Text="{Binding DisplayText}" FontSize="9" FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextDisabledBrush}" />
+      </Border>
+    </DataTemplate>
+    <DataTemplate DataType="models:PlayerDisplayInfo">
+      <Grid ColumnDefinitions="16,22,*,45,35,40,30,50,40" Margin="2,1" Opacity="{Binding RowOpacity}">
+        <TextBlock Grid.Column="0" Text="{Binding StatusIcon}" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"
+                   Foreground="{DynamicResource ErrorBrush}" HorizontalAlignment="Center" />
+        <Panel Grid.Column="1" VerticalAlignment="Center">
+          <Image Source="{Binding FlagImage}" Width="18" Height="12"
+                 IsVisible="{Binding HasFlagImage}" />
+          <TextBlock Text="{Binding FlagText}" FontSize="9"
+                     Foreground="{DynamicResource TextDisabledBrush}"
+                     IsVisible="{Binding !HasFlagImage}" />
+        </Panel>
+        <TextBlock Grid.Column="2" Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextPrimaryBrush}" />
+        <TextBlock Grid.Column="3" Text="{Binding ScoreText}" Foreground="{DynamicResource ScoreBrush}" HorizontalAlignment="Right" />
+        <TextBlock Grid.Column="4" Text="{Binding KillsText}" Foreground="{DynamicResource KillsBrush}" HorizontalAlignment="Right" />
+        <TextBlock Grid.Column="5" Text="{Binding DeathsText}" Foreground="{DynamicResource DeathsBrush}" HorizontalAlignment="Right" />
+        <TextBlock Grid.Column="6" Text="{Binding PingText}" Foreground="{Binding PingBrush}" HorizontalAlignment="Right" />
+        <TextBlock Grid.Column="7" Text="{Binding SquadText}" Foreground="{DynamicResource TextDisabledBrush}" HorizontalAlignment="Right" />
+        <TextBlock Grid.Column="8" Text="{Binding ThreatText}" Foreground="{DynamicResource ErrorBrush}" FontSize="9" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center" />
+      </Grid>
+    </DataTemplate>
+  </Window.DataTemplates>
 
   <Window.Resources>
     <!-- Column header row for player lists -->
@@ -734,8 +765,7 @@
                       <ListBox Name="TeamList1" Background="Transparent"
                                Foreground="{DynamicResource TextPrimaryBrush}" FontSize="10"
                                SelectionMode="Multiple"
-                               Padding="2" ItemTemplate="{StaticResource PlayerItemTemplate}">
-                      </ListBox>
+                               Padding="2" ItemTemplate="{StaticResource PlayerItemTemplate}" />
                     </DockPanel>
                   </Border>
                   <!-- Team 2 -->
@@ -764,8 +794,7 @@
                       <ListBox Name="TeamList2" Background="Transparent"
                                Foreground="{DynamicResource TextPrimaryBrush}" FontSize="10"
                                SelectionMode="Multiple"
-                               Padding="2" ItemTemplate="{StaticResource PlayerItemTemplate}">
-                      </ListBox>
+                               Padding="2" ItemTemplate="{StaticResource PlayerItemTemplate}" />
                     </DockPanel>
                   </Border>
                   <!-- Team 3 -->
@@ -794,8 +823,7 @@
                       <ListBox Name="TeamList3" Background="Transparent"
                                Foreground="{DynamicResource TextPrimaryBrush}" FontSize="10"
                                SelectionMode="Multiple"
-                               Padding="2" ItemTemplate="{StaticResource PlayerItemTemplate}">
-                      </ListBox>
+                               Padding="2" ItemTemplate="{StaticResource PlayerItemTemplate}" />
                     </DockPanel>
                   </Border>
                   <!-- Team 4 -->
@@ -824,8 +852,7 @@
                       <ListBox Name="TeamList4" Background="Transparent"
                                Foreground="{DynamicResource TextPrimaryBrush}" FontSize="10"
                                SelectionMode="Multiple"
-                               Padding="2" ItemTemplate="{StaticResource PlayerItemTemplate}">
-                      </ListBox>
+                               Padding="2" ItemTemplate="{StaticResource PlayerItemTemplate}" />
                     </DockPanel>
                   </Border>
                 </Grid>

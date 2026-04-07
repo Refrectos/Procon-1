@@ -2672,16 +2672,42 @@ namespace PRoCon.UI.Views
                 if (_teamLists[t] != null)
                 {
                     _teamLists[t].ItemsSource = null;
+
                     if (entry.GroupBySquad)
-                        _teamLists[t].ItemsSource = players.OrderBy(p => p.Squad).ThenByDescending(p => p.Score).ToList();
+                    {
+                        // Build mixed list with squad headers interleaved
+                        var grouped = players.GroupBy(p => p.Squad).OrderBy(g => g.Key);
+                        var mixedItems = new List<object>();
+                        foreach (var group in grouped)
+                        {
+                            string squadName = group.Key > 0 && group.Key < 27
+                                ? new[] { "-", "Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot",
+                                    "Golf", "Hotel", "India", "Juliet", "Kilo", "Lima", "Mike",
+                                    "November", "Oscar", "Papa", "Quebec", "Romeo", "Sierra",
+                                    "Tango", "Uniform", "Victor", "Whiskey", "X-Ray", "Yankee", "Zulu" }[group.Key]
+                                : group.Key == 0 ? "No Squad" : $"Squad {group.Key}";
+                            mixedItems.Add(new SquadHeaderItem { SquadName = squadName, PlayerCount = group.Count() });
+                            mixedItems.AddRange(group.OrderByDescending(p => p.Score));
+                        }
+                        // Clear fixed template so Avalonia uses type-based matching
+                        _teamLists[t].ItemTemplate = null;
+                        _teamLists[t].ItemsSource = mixedItems;
+                    }
                     else
+                    {
+                        // Restore fixed template for flat view
+                        if (_teamLists[t].ItemTemplate == null)
+                            _teamLists[t].ItemTemplate = (Avalonia.Controls.Templates.IDataTemplate)this.FindResource("PlayerItemTemplate");
                         _teamLists[t].ItemsSource = players;
+                    }
 
                     // Restore selections by name
                     if (selectedNames.Count > 0)
-                        foreach (var p in players)
-                            if (selectedNames.Contains(p.Name))
+                    {
+                        foreach (var item in _teamLists[t].ItemsSource)
+                            if (item is PlayerDisplayInfo p && selectedNames.Contains(p.Name))
                                 _teamLists[t].SelectedItems.Add(p);
+                    }
                 }
 
                 if (_teamHeaders[t] != null)
@@ -2764,10 +2790,29 @@ namespace PRoCon.UI.Views
             return null;
         }
 
+        private bool _suppressSelectionChanged;
+
         private void OnPlayerListSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // Gather all selected players across every team/spectator/commander ListBox
+            if (_suppressSelectionChanged) return;
+
+            var sourceList = sender as ListBox;
             var allLists = new ListBox[] { _teamLists[0], _teamLists[1], _teamLists[2], _teamLists[3], _spectatorList, _commanderList };
+
+            // If the source list has a new selection, clear all OTHER lists
+            // This gives standard single-click-selects-one behavior across lists
+            if (sourceList != null && e.AddedItems.Count > 0)
+            {
+                _suppressSelectionChanged = true;
+                foreach (var lb in allLists)
+                {
+                    if (lb != null && lb != sourceList)
+                        lb.SelectedItems.Clear();
+                }
+                _suppressSelectionChanged = false;
+            }
+
+            // Gather all selected players
             var selected = new List<PlayerDisplayInfo>();
             foreach (var lb in allLists)
             {
