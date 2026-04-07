@@ -171,3 +171,6 @@ procon-ui-crash.log
 .superpowers/
 docs/superpowers/
 PRoCon-v2-Alpha-Setup.exe
+PRoCon-v2-Alpha-Setup-WithMusic.exe
+*.mp3
+.env*

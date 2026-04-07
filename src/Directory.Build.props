@@ -6,7 +6,7 @@
     <InformationalVersion>2.0.0-dev</InformationalVersion>
     <Company>EZSCALE</Company>
     <Product>PRoCon Frostbite</Product>
-    <Copyright>Copyright © Myrcon / EZSCALE 2025</Copyright>
+    <Copyright>Copyright © Myrcon / EZSCALE 2025-2026</Copyright>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>

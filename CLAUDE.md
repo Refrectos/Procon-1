@@ -55,7 +55,7 @@ Style: 4-space indent, braces on new lines, sorted usings, LF line endings.
 |---------|---------|
 | `PRoCon.Core` | Core business logic, protocol, plugins, config |
 | `PRoCon.UI` | Avalonia GUI (16 tabbed panels) |
-| `PRoCon.Console` | Headless console app |
+| `PRoCon.Console` | Terminal UI (TUI) + headless console |
 | `PRoCon.Service` | Windows Service / Linux systemd wrapper |
 | `PRoCon.Themes` | Dark/Light theme ResourceDictionaries |
 

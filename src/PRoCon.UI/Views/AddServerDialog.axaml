@@ -34,7 +34,7 @@
         <TextBlock Grid.Row="0" Grid.Column="0" Text="Host:"
                    Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,4" />
         <TextBox Grid.Row="0" Grid.Column="1" Name="HostInput"
-                 Watermark="e.g. 65.75.210.194"
+                 Watermark="e.g. 192.168.1.100"
                  Background="{DynamicResource InputBackgroundBrush}"
                  Foreground="{DynamicResource TextPrimaryBrush}"
                  BorderBrush="{DynamicResource BorderBrush}" Margin="0,4" />
