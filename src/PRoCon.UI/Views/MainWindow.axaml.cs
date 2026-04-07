@@ -2796,5 +2796,11 @@ namespace PRoCon.UI.Views
 
             TopLevel.GetTopLevel(this)?.Clipboard?.SetTextAsync(player.Name);
         }
+
+        private async void OnPlayerCopyGUID(object sender, RoutedEventArgs e) { }
+
+        private void OnViewByScore(object sender, RoutedEventArgs e) { }
+
+        private void OnViewBySquad(object sender, RoutedEventArgs e) { }
     }
 }
