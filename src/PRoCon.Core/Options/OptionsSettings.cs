@@ -422,6 +422,17 @@ namespace PRoCon.Core.Options
             }
         }
 
+        private string m_dismissedChangelogVersion = "";
+        public string DismissedChangelogVersion
+        {
+            get { return m_dismissedChangelogVersion; }
+            set
+            {
+                m_dismissedChangelogVersion = value ?? "";
+                m_praApplication.SaveMainConfig();
+            }
+        }
+
         private bool m_isBlockRssFeedNewsEnabled;
         public bool BlockRssFeedNews
         {

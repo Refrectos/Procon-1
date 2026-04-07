@@ -127,6 +127,9 @@ namespace PRoCon.Core.Options
         [JsonProperty("proxyCheckApiKey")]
         public string ProxyCheckApiKey { get; set; } = "";
 
+        [JsonProperty("dismissedChangelogVersion")]
+        public string DismissedChangelogVersion { get; set; } = "";
+
         [JsonProperty("trustedHosts")]
         public List<TrustedHostConfig> TrustedHosts { get; set; } = new List<TrustedHostConfig>();
 

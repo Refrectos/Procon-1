@@ -1031,6 +1031,7 @@ namespace PRoCon.Core
                 this.OptionsSettings.PluginMaxRuntime_s = config.Options.PluginMaxRuntimeSeconds;
                 this.OptionsSettings.StatsLinksMaxNum = config.Options.StatsLinksMaxNum;
                 this.OptionsSettings.ProxyCheckApiKey = config.Options.ProxyCheckApiKey ?? "";
+                this.OptionsSettings.DismissedChangelogVersion = config.Options.DismissedChangelogVersion ?? "";
 
                 foreach (var trusted in config.Options.TrustedHosts)
                     this.OptionsSettings.TrustedHostsWebsitesPorts.Add(new TrustedHostWebsitePort(trusted.Host, trusted.Port));
@@ -1118,6 +1119,7 @@ namespace PRoCon.Core
                         PluginMaxRuntimeSeconds = this.OptionsSettings.PluginMaxRuntime_s,
                         StatsLinksMaxNum = this.OptionsSettings.StatsLinksMaxNum,
                         ProxyCheckApiKey = this.OptionsSettings.ProxyCheckApiKey ?? "",
+                        DismissedChangelogVersion = this.OptionsSettings.DismissedChangelogVersion ?? "",
                     },
                 };
 
