@@ -70,14 +70,14 @@ namespace PRoCon.UI.Views
                     Text = $"v{release.Version}",
                     FontSize = 13,
                     FontWeight = isCurrent ? FontWeight.Bold : FontWeight.Normal,
-                    Foreground = (IBrush)FindBrush(isCurrent ? "PrimaryBrush" : "TextPrimaryBrush"),
+                    Foreground = FindBrush(isCurrent ? "PrimaryBrush" : "TextPrimaryBrush"),
                 };
 
                 var dateText = new TextBlock
                 {
                     Text = release.PublishedAt.ToString("MMM d, yyyy"),
                     FontSize = 10,
-                    Foreground = (IBrush)FindBrush("TextDisabledBrush"),
+                    Foreground = FindBrush("TextDisabledBrush"),
                 };
 
                 var label = release.IsPreRelease ? " (pre-release)" : "";
@@ -87,7 +87,7 @@ namespace PRoCon.UI.Views
                     {
                         Text = label,
                         FontSize = 9,
-                        Foreground = (IBrush)FindBrush("TextDisabledBrush"),
+                        Foreground = FindBrush("TextDisabledBrush"),
                     };
                     var stack = new StackPanel { Spacing = 2 };
                     stack.Children.Add(versionText);
@@ -125,7 +125,7 @@ namespace PRoCon.UI.Views
             border.PointerEntered += (s, e) =>
             {
                 if (border != _selectedVersionBorder)
-                    border.Background = (IBrush)FindBrush("NavHoverBackgroundBrush");
+                    border.Background = FindBrush("NavHoverBackgroundBrush");
             };
             border.PointerExited += (s, e) =>
             {
@@ -153,8 +153,8 @@ namespace PRoCon.UI.Views
             // Select new
             if (index < versionList.Children.Count && versionList.Children[index] is Border border)
             {
-                border.BorderBrush = (IBrush)FindBrush("PrimaryBrush");
-                border.Background = (IBrush)FindBrush("NavActiveBackgroundBrush");
+                border.BorderBrush = FindBrush("PrimaryBrush");
+                border.Background = FindBrush("NavActiveBackgroundBrush");
                 _selectedVersionBorder = border;
             }
 
@@ -175,14 +175,14 @@ namespace PRoCon.UI.Views
                 Text = $"v{release.Version}",
                 FontSize = 20,
                 FontWeight = FontWeight.Bold,
-                Foreground = (IBrush)FindBrush("PrimaryBrush"),
+                Foreground = FindBrush("PrimaryBrush"),
             });
 
             panel.Children.Add(new TextBlock
             {
                 Text = $"Released {release.PublishedAt:MMMM d, yyyy}",
                 FontSize = 11,
-                Foreground = (IBrush)FindBrush("TextDisabledBrush"),
+                Foreground = FindBrush("TextDisabledBrush"),
                 Margin = new Thickness(0, 0, 0, 12),
             });
 
@@ -194,7 +194,7 @@ namespace PRoCon.UI.Views
                 panel.Children.Add(new TextBlock
                 {
                     Text = "No release notes available.",
-                    Foreground = (IBrush)FindBrush("TextSecondaryBrush"),
+                    Foreground = FindBrush("TextSecondaryBrush"),
                     FontSize = 12,
                     FontStyle = FontStyle.Italic,
                 });
@@ -223,7 +223,7 @@ namespace PRoCon.UI.Views
                         Text = section.Heading,
                         FontSize = 13,
                         FontWeight = FontWeight.SemiBold,
-                        Foreground = (IBrush)FindBrush("TextPrimaryBrush"),
+                        Foreground = FindBrush("TextPrimaryBrush"),
                         VerticalAlignment = VerticalAlignment.Center,
                     });
 
@@ -250,7 +250,7 @@ namespace PRoCon.UI.Views
                         itemPanel.Children.Add(new TextBlock
                         {
                             Text = "\u2022",
-                            Foreground = (IBrush)FindBrush("TextDisabledBrush"),
+                            Foreground = FindBrush("TextDisabledBrush"),
                             FontSize = 12,
                             VerticalAlignment = VerticalAlignment.Top,
                         });
@@ -260,7 +260,7 @@ namespace PRoCon.UI.Views
                     {
                         Text = item,
                         FontSize = 12,
-                        Foreground = (IBrush)FindBrush("TextSecondaryBrush"),
+                        Foreground = FindBrush("TextSecondaryBrush"),
                         TextWrapping = TextWrapping.Wrap,
                         MaxWidth = 350,
                         VerticalAlignment = VerticalAlignment.Top,
@@ -319,10 +319,10 @@ namespace PRoCon.UI.Views
             };
         }
 
-        private object FindBrush(string name)
+        private IBrush FindBrush(string name)
         {
-            if (this.TryFindResource(name, this.ActualThemeVariant, out object brush))
-                return brush;
+            if (this.TryFindResource(name, this.ActualThemeVariant, out object brush) && brush is IBrush b)
+                return b;
             return Brushes.Gray;
         }
 

@@ -108,16 +108,12 @@ namespace PRoCon.UI.Models
         public string FlagText => !string.IsNullOrEmpty(CountryCode) ? CountryCode.ToUpper() : "";
         public string ThreatText => IsVPN ? "VPN" : IsProxy ? "PROXY" : "";
 
-        public IBrush PingBrush
-        {
-            get
-            {
-                if (Ping <= 0) return new SolidColorBrush(Color.Parse("#666666"));
-                if (Ping <= 50) return new SolidColorBrush(Color.Parse("#81c784"));
-                if (Ping <= 120) return new SolidColorBrush(Color.Parse("#ffd740"));
-                return new SolidColorBrush(Color.Parse("#ef5350"));
-            }
-        }
+        private static readonly IBrush PingNone = new SolidColorBrush(Color.Parse("#666666"));
+        private static readonly IBrush PingGood = new SolidColorBrush(Color.Parse("#81c784"));
+        private static readonly IBrush PingMedium = new SolidColorBrush(Color.Parse("#ffd740"));
+        private static readonly IBrush PingHigh = new SolidColorBrush(Color.Parse("#ef5350"));
+
+        public IBrush PingBrush => Ping <= 0 ? PingNone : Ping <= 50 ? PingGood : Ping <= 120 ? PingMedium : PingHigh;
 
         private Bitmap _flagImage;
         public Bitmap FlagImage

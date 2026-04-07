@@ -846,6 +846,8 @@ namespace PRoCon.UI.Views
             catch { }
         }
 
+        private readonly ConcurrentDictionary<string, int> _flagRetryCount = new(StringComparer.OrdinalIgnoreCase);
+
         private void LoadFlagImage(PlayerDisplayInfo player)
         {
             if (string.IsNullOrEmpty(player.CountryCode) || player.FlagImage != null)
@@ -865,9 +867,13 @@ namespace PRoCon.UI.Views
             }
             else
             {
-                // Flag is being downloaded — retry after a short delay
-                Avalonia.Threading.DispatcherTimer.RunOnce(() => LoadFlagImage(player),
-                    System.TimeSpan.FromSeconds(2));
+                // Flag is being downloaded — retry after a short delay (max 3 attempts)
+                int retries = _flagRetryCount.AddOrUpdate(player.CountryCode, 1, (_, v) => v + 1);
+                if (retries <= 3)
+                {
+                    Avalonia.Threading.DispatcherTimer.RunOnce(() => LoadFlagImage(player),
+                        System.TimeSpan.FromSeconds(2));
+                }
             }
         }
 
@@ -2575,7 +2581,7 @@ namespace PRoCon.UI.Views
                 if (!string.IsNullOrEmpty(dialog.Username) && client.Username != dialog.Username)
                 {
                     client.Username = dialog.Username;
-                    needsReconnect = client.State == PRoCon.Core.Remote.ConnectionState.Connected;
+                    needsReconnect |= client.State == PRoCon.Core.Remote.ConnectionState.Connected;
                 }
 
                 if (needsReconnect)
