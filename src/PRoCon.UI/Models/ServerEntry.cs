@@ -122,6 +122,25 @@ namespace PRoCon.UI.Models
         public ObservableCollection<string> KillFeed { get; } = new ObservableCollection<string>();
         public string GameVersion { get; set; } = "";
 
+        // Team display data resolved from game server
+        public Dictionary<int, string> TeamNames { get; } = new Dictionary<int, string>
+        {
+            { 1, "Team 1" }, { 2, "Team 2" }, { 3, "Team 3" }, { 4, "Team 4" }
+        };
+        public Dictionary<int, int> TeamTickets { get; } = new Dictionary<int, int>
+        {
+            { 1, 0 }, { 2, 0 }, { 3, 0 }, { 4, 0 }
+        };
+        public int TargetTickets { get; set; }
+
+        // Player list view mode
+        private bool _groupBySquad;
+        public bool GroupBySquad
+        {
+            get => _groupBySquad;
+            set { _groupBySquad = value; Notify(nameof(GroupBySquad)); }
+        }
+
         public string DisplayName
         {
             get
