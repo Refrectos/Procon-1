@@ -123,6 +123,7 @@ namespace PRoCon.UI.Views
         private Button _connectSelectedButton;
         private Button _disconnectButton;
         private Button _autoConnectButton;
+        private Button _editServerButton;
         private Button _removeServerButton;
         private TextBlock _connectionCountText;
         private TextBlock _landingServerCount;
@@ -204,6 +205,7 @@ namespace PRoCon.UI.Views
             _connectSelectedButton = this.FindControl<Button>("ConnectSelectedButton");
             _disconnectButton = this.FindControl<Button>("DisconnectButton");
             _autoConnectButton = this.FindControl<Button>("AutoConnectButton");
+            _editServerButton = this.FindControl<Button>("EditServerButton");
             _removeServerButton = this.FindControl<Button>("RemoveServerButton");
             _connectionCountText = this.FindControl<TextBlock>("ConnectionCountText");
             _landingServerCount = this.FindControl<TextBlock>("LandingServerCount");
@@ -281,6 +283,11 @@ namespace PRoCon.UI.Views
                 _eventsPanel = new EventsPanel();
                 _serverSettingsPanel = new ServerSettingsPanel();
                 _playerActionsPanel = new PlayerActionsPanel();
+                _playerActionsPanel.OnClearSelectionRequested = () =>
+                {
+                    foreach (var lb in new ListBox[] { _teamLists[0], _teamLists[1], _teamLists[2], _teamLists[3], _spectatorList, _commanderList })
+                        if (lb != null) lb.SelectedItems.Clear();
+                };
                 _layerPanel = new LayerPanel();
                 _spectatorListPanel = new SpectatorListPanel();
                 _punkBusterPanel = new PunkBusterPanel();
@@ -817,10 +824,36 @@ namespace PRoCon.UI.Views
                         player.IsVPN = result.IsVPN;
                         player.IsProxy = result.IsProxy;
                         player.IP = ip;
+                        LoadFlagImage(player);
                     }
                 });
             }
             catch { }
+        }
+
+        private void LoadFlagImage(PlayerDisplayInfo player)
+        {
+            if (string.IsNullOrEmpty(player.CountryCode) || player.FlagImage != null)
+                return;
+
+            var cache = _application?.FlagImageCache;
+            if (cache == null) return;
+
+            string path = cache.GetFlagPath(player.CountryCode);
+            if (path != null)
+            {
+                try
+                {
+                    player.FlagImage = new Avalonia.Media.Imaging.Bitmap(path);
+                }
+                catch { }
+            }
+            else
+            {
+                // Flag is being downloaded — retry after a short delay
+                Avalonia.Threading.DispatcherTimer.RunOnce(() => LoadFlagImage(player),
+                    System.TimeSpan.FromSeconds(2));
+            }
         }
 
         private void OnClientEvent(ServerEntry entry, Action action)
@@ -1132,6 +1165,7 @@ namespace PRoCon.UI.Views
                         display.CountryCode = prev.CountryCode;
                         display.IsVPN = prev.IsVPN;
                         display.IsProxy = prev.IsProxy;
+                        display.FlagImage = prev.FlagImage;
                     }
 
                     entry.PlayerLookup[player.SoldierName] = display;
@@ -1153,9 +1187,9 @@ namespace PRoCon.UI.Views
                     }
                 }
 
-                // Sort each team by score descending
+                // Sort each team by score descending (in-place to preserve list reference)
                 for (int t = 1; t <= 4; t++)
-                    entry.TeamPlayers[t] = entry.TeamPlayers[t].OrderByDescending(p => p.Score).ToList();
+                    entry.TeamPlayers[t].Sort((a, b) => b.Score.CompareTo(a.Score));
 
                 // Also keep flat list for backward compat
                 var items = new List<string>();
@@ -1610,6 +1644,7 @@ namespace PRoCon.UI.Views
             ShowConnectButton(false);
             ShowDisconnectButton(false);
             ShowRemoveButton(false);
+            ShowEditButton(false);
             UpdateConnectionCount();
             _application.SaveMainConfig();
 
@@ -2400,6 +2435,7 @@ namespace PRoCon.UI.Views
             ShowConnectButton(hasSelection && !connected && !connecting);
             ShowDisconnectButton(hasSelection && (connected || connecting));
             ShowRemoveButton(hasSelection);
+            ShowEditButton(hasSelection);
 
             // Auto-connect toggle — always visible when a server is selected
             if (_autoConnectButton != null)
@@ -2427,6 +2463,87 @@ namespace PRoCon.UI.Views
         private void ShowRemoveButton(bool show)
         {
             if (_removeServerButton != null) _removeServerButton.IsVisible = show;
+        }
+
+        private void ShowEditButton(bool show)
+        {
+            if (_editServerButton != null) _editServerButton.IsVisible = show;
+        }
+
+        private async void OnEditServer(object sender, RoutedEventArgs e)
+        {
+            if (_selectedServer == null) return;
+
+            var client = GetClient(_selectedServer.HostPort);
+            if (client == null) return;
+
+            var dialog = new AddServerDialog();
+            dialog.SetEditMode(
+                client.HostName,
+                client.Port,
+                client.Password,
+                client.Username,
+                _selectedServer.IsLayerConnection);
+            await dialog.ShowDialog(this);
+
+            if (!dialog.Confirmed) return;
+
+            string newHostPort = $"{dialog.Host}:{dialog.Port}";
+            bool addressChanged = !string.Equals(newHostPort, _selectedServer.HostPort, StringComparison.OrdinalIgnoreCase);
+
+            if (addressChanged)
+            {
+                // Address changed — remove old connection and create new one
+                bool wasConnected = client.State == PRoCon.Core.Remote.ConnectionState.Connected;
+                client.AutomaticallyConnect = false;
+                client.Shutdown();
+                _application.Connections.Remove(_selectedServer.HostPort);
+                _wiredClients.Remove(_selectedServer.HostPort);
+                _wiredGameEntries.Remove(_selectedServer);
+                _wiredConsoles.Remove(_selectedServer.HostPort);
+                _serverLookup.Remove(_selectedServer.HostPort);
+                _servers.Remove(_selectedServer);
+
+                var newClient = _application.AddConnection(dialog.Host, dialog.Port,
+                    string.IsNullOrEmpty(dialog.Username) ? "default" : dialog.Username, dialog.Password);
+                if (newClient != null)
+                {
+                    var entry = EnsureServerEntry(newHostPort);
+                    WireClientEvents(newClient, entry);
+                    _selectedServer = entry;
+                    newClient.AutomaticallyConnect = wasConnected;
+                    if (_serverList != null) _serverList.SelectedItem = entry;
+                    LoadServerView(entry);
+                }
+            }
+            else
+            {
+                // Same address — just update password/username
+                bool needsReconnect = false;
+
+                if (client.Password != dialog.Password)
+                {
+                    client.Password = dialog.Password;
+                    needsReconnect = client.State == PRoCon.Core.Remote.ConnectionState.Connected;
+                }
+
+                if (!string.IsNullOrEmpty(dialog.Username) && client.Username != dialog.Username)
+                {
+                    client.Username = dialog.Username;
+                    needsReconnect = client.State == PRoCon.Core.Remote.ConnectionState.Connected;
+                }
+
+                if (needsReconnect)
+                {
+                    client.Shutdown();
+                    client.AutomaticallyConnect = true;
+                }
+            }
+
+            UpdateSidebarButtons();
+            UpdateConnectionCount();
+            _application.SaveMainConfig();
+            UpdateStatus("TextSecondaryBrush", "Server settings updated");
         }
 
         private void UpdateConnectionCount()
@@ -2486,12 +2603,32 @@ namespace PRoCon.UI.Views
                 }
             }
 
+            // Snapshot selected player names before updating ItemsSource
+            var selectedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var allLists = new ListBox[] { _teamLists[0], _teamLists[1], _teamLists[2], _teamLists[3], _spectatorList, _commanderList };
+            foreach (var lb in allLists)
+            {
+                if (lb?.SelectedItems == null) continue;
+                foreach (var item in lb.SelectedItems)
+                    if (item is PlayerDisplayInfo p)
+                        selectedNames.Add(p.Name);
+            }
+
             for (int t = 0; t < 4; t++)
             {
                 var players = entry.TeamPlayers.ContainsKey(t + 1) ? entry.TeamPlayers[t + 1] : new List<PlayerDisplayInfo>();
 
                 if (_teamLists[t] != null)
+                {
+                    _teamLists[t].ItemsSource = null;
                     _teamLists[t].ItemsSource = players;
+
+                    // Restore selections by name
+                    if (selectedNames.Count > 0)
+                        foreach (var p in players)
+                            if (selectedNames.Contains(p.Name))
+                                _teamLists[t].SelectedItems.Add(p);
+                }
 
                 if (_teamHeaders[t] != null)
                     _teamHeaders[t].Text = $"Team {t + 1} ({players.Count})";
@@ -2503,7 +2640,14 @@ namespace PRoCon.UI.Views
 
             // Spectators
             if (_spectatorList != null)
+            {
+                _spectatorList.ItemsSource = null;
                 _spectatorList.ItemsSource = entry.Spectators;
+                if (selectedNames.Count > 0)
+                    foreach (var p in entry.Spectators)
+                        if (selectedNames.Contains(p.Name))
+                            _spectatorList.SelectedItems.Add(p);
+            }
             if (_spectatorHeader != null)
                 _spectatorHeader.Text = $"Spectators ({entry.Spectators.Count})";
             if (_spectatorPanel != null)
@@ -2511,7 +2655,14 @@ namespace PRoCon.UI.Views
 
             // Commanders
             if (_commanderList != null)
+            {
+                _commanderList.ItemsSource = null;
                 _commanderList.ItemsSource = entry.Commanders;
+                if (selectedNames.Count > 0)
+                    foreach (var p in entry.Commanders)
+                        if (selectedNames.Contains(p.Name))
+                            _commanderList.SelectedItems.Add(p);
+            }
             if (_commanderHeader != null)
                 _commanderHeader.Text = $"Commanders ({entry.Commanders.Count})";
             if (_commanderPanel != null)

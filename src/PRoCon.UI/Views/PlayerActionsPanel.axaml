@@ -11,29 +11,60 @@
             Background="{DynamicResource SurfaceBrush}"
             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
             CornerRadius="3" Padding="10" Margin="0,0,0,6">
-      <StackPanel Spacing="4">
-        <TextBlock Name="PlayerNameText" Text="No player selected"
-                   FontSize="14" FontWeight="Bold"
-                   Foreground="{DynamicResource PrimaryBrush}"
-                   TextTrimming="CharacterEllipsis" />
-        <Grid ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto" Margin="0,2,0,0">
-          <TextBlock Grid.Row="0" Grid.Column="0" Text="Score: " FontSize="10"
-                     Foreground="{DynamicResource TextSecondaryBrush}" />
-          <TextBlock Grid.Row="0" Grid.Column="1" Name="PlayerScoreText" Text="--" FontSize="10"
-                     Foreground="{DynamicResource ScoreBrush}" />
-          <TextBlock Grid.Row="0" Grid.Column="2" Text="K/D: " FontSize="10"
-                     Foreground="{DynamicResource TextSecondaryBrush}" />
-          <TextBlock Grid.Row="0" Grid.Column="3" Name="PlayerKDText" Text="--" FontSize="10"
-                     Foreground="{DynamicResource TextPrimaryBrush}" />
+      <StackPanel Spacing="6">
+        <!-- Player name + clear button -->
+        <DockPanel>
+          <Button DockPanel.Dock="Right" Content="X" FontSize="9" Padding="4,1" CornerRadius="3"
+                  Background="Transparent" Foreground="{DynamicResource TextDisabledBrush}"
+                  Click="OnClearSelection" ToolTip.Tip="Clear selection" />
+          <TextBlock Name="PlayerNameText" Text="No player selected"
+                     FontSize="14" FontWeight="Bold"
+                     Foreground="{DynamicResource PrimaryBrush}"
+                     TextTrimming="CharacterEllipsis" />
+        </DockPanel>
 
-          <TextBlock Grid.Row="1" Grid.Column="0" Text="Ping: " FontSize="10"
-                     Foreground="{DynamicResource TextSecondaryBrush}" />
-          <TextBlock Grid.Row="1" Grid.Column="1" Name="PlayerPingText" Text="--" FontSize="10"
-                     Foreground="{DynamicResource TextPrimaryBrush}" />
-          <TextBlock Grid.Row="1" Grid.Column="2" Text="Squad: " FontSize="10"
-                     Foreground="{DynamicResource TextSecondaryBrush}" />
-          <TextBlock Grid.Row="1" Grid.Column="3" Name="PlayerSquadText" Text="--" FontSize="10"
-                     Foreground="{DynamicResource TextPrimaryBrush}" />
+        <!-- Location row: flag + country + threat badge -->
+        <StackPanel Name="LocationRow" Orientation="Horizontal" Spacing="6" IsVisible="False">
+          <Image Name="PlayerFlagImage" Width="18" Height="12" VerticalAlignment="Center" />
+          <TextBlock Name="PlayerCountryText" Text="" FontSize="10"
+                     Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" />
+          <Border Name="ThreatBadge" CornerRadius="3" Padding="5,1" VerticalAlignment="Center"
+                  Background="#4a2d2d" IsVisible="False">
+            <TextBlock Name="PlayerThreatText" Text="" FontSize="9" FontWeight="Bold"
+                       Foreground="{DynamicResource ErrorBrush}" />
+          </Border>
+        </StackPanel>
+
+        <!-- IP address -->
+        <TextBlock Name="PlayerIPText" Text="" FontSize="9"
+                   Foreground="{DynamicResource TextDisabledBrush}" FontFamily="Consolas,monospace" />
+
+        <!-- Stats grid -->
+        <Grid ColumnDefinitions="*,*,*,*" Margin="0,2,0,0">
+          <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+            <TextBlock Text="SCORE" FontSize="8" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextDisabledBrush}" HorizontalAlignment="Center" />
+            <TextBlock Name="PlayerScoreText" Text="--" FontSize="13" FontWeight="Bold"
+                       Foreground="{DynamicResource ScoreBrush}" HorizontalAlignment="Center" />
+          </StackPanel>
+          <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+            <TextBlock Text="K/D" FontSize="8" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextDisabledBrush}" HorizontalAlignment="Center" />
+            <TextBlock Name="PlayerKDText" Text="--" FontSize="13" FontWeight="Bold"
+                       Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" />
+          </StackPanel>
+          <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+            <TextBlock Text="PING" FontSize="8" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextDisabledBrush}" HorizontalAlignment="Center" />
+            <TextBlock Name="PlayerPingText" Text="--" FontSize="13" FontWeight="Bold"
+                       Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" />
+          </StackPanel>
+          <StackPanel Grid.Column="3" HorizontalAlignment="Center">
+            <TextBlock Text="SQUAD" FontSize="8" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextDisabledBrush}" HorizontalAlignment="Center" />
+            <TextBlock Name="PlayerSquadText" Text="--" FontSize="13" FontWeight="Bold"
+                       Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" />
+          </StackPanel>
         </Grid>
       </StackPanel>
     </Border>

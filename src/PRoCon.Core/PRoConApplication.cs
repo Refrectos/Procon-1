@@ -75,6 +75,7 @@ namespace PRoCon.Core
         /// Shared IP check service (ProxyCheck.io). Available to plugins via procon.protected.ipcheck command.
         /// </summary>
         public Network.IPCheckService IPCheckService { get; private set; }
+        public Network.FlagImageCache FlagImageCache { get; private set; }
 
         public bool ConsoleMode { get; set; }
 
@@ -494,6 +495,7 @@ namespace PRoCon.Core
 
             string ipCacheDir = Path.Combine(ProConPaths.CacheDirectory, "IPCheck");
             this.IPCheckService = new Network.IPCheckService(ipCacheDir);
+            this.FlagImageCache = new Network.FlagImageCache(ProConPaths.CacheDirectory);
 
             this.SavedWindowBounds = new WindowBounds();
 

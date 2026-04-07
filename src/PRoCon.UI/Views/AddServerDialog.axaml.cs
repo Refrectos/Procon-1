@@ -13,9 +13,44 @@ namespace PRoCon.UI.Views
         public bool IsLayerConnection { get; private set; }
         public bool Confirmed { get; private set; }
 
+        /// <summary>
+        /// When true, the dialog is editing an existing server rather than adding a new one.
+        /// </summary>
+        public bool IsEditMode { get; private set; }
+
         public AddServerDialog()
         {
             InitializeComponent();
+        }
+
+        /// <summary>
+        /// Pre-fills the dialog for editing an existing server connection.
+        /// </summary>
+        public void SetEditMode(string host, ushort port, string password, string username = "", bool isLayer = false)
+        {
+            IsEditMode = true;
+            IsLayerConnection = isLayer;
+
+            // Defer field population until the window is opened and controls are available
+            this.Opened += (s, e) =>
+            {
+                var hostInput = this.FindControl<TextBox>("HostInput");
+                var portInput = this.FindControl<TextBox>("PortInput");
+                var usernameInput = this.FindControl<TextBox>("UsernameInput");
+                var passwordInput = this.FindControl<TextBox>("PasswordInput");
+                var title = this.FindControl<TextBlock>("DialogTitle");
+                var addButton = this.FindControl<Button>("AddButton");
+
+                if (hostInput != null) hostInput.Text = host;
+                if (portInput != null) portInput.Text = port.ToString();
+                if (passwordInput != null) passwordInput.Text = password;
+                if (usernameInput != null) usernameInput.Text = username;
+                if (title != null) title.Text = "Edit Server";
+                if (addButton != null) addButton.Content = "Save";
+                this.Title = "Edit Server";
+
+                if (isLayer) UpdateMode();
+            };
         }
 
         private static IBrush ResolveBrush(string key)

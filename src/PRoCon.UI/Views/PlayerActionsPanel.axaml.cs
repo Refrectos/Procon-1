@@ -43,6 +43,12 @@ namespace PRoCon.UI.Views
         /// <summary>
         /// Called when player selection changes. Accepts the full list of currently selected players.
         /// </summary>
+        /// <summary>
+        /// Callback to clear selection in the player ListBoxes.
+        /// Set by MainWindow.
+        /// </summary>
+        public Action OnClearSelectionRequested { get; set; }
+
         public void SetSelectedPlayers(List<PlayerDisplayInfo> players)
         {
             _selectedPlayers.Clear();
@@ -63,6 +69,25 @@ namespace PRoCon.UI.Views
                 SetText("PlayerKDText", $"{p.Kills}/{p.Deaths}");
                 SetText("PlayerPingText", p.PingText);
                 SetText("PlayerSquadText", p.SquadText);
+                SetText("PlayerIPText", p.IP ?? "");
+                SetText("PlayerCountryText", p.CountryText);
+
+                // Show location row if we have country data
+                var locationRow = this.FindControl<StackPanel>("LocationRow");
+                if (locationRow != null)
+                    locationRow.IsVisible = !string.IsNullOrEmpty(p.CountryCode);
+
+                // Flag image
+                var flagImg = this.FindControl<Avalonia.Controls.Image>("PlayerFlagImage");
+                if (flagImg != null)
+                    flagImg.Source = p.FlagImage;
+
+                // Threat badge
+                var threatBadge = this.FindControl<Avalonia.Controls.Border>("ThreatBadge");
+                string threat = p.ThreatText;
+                SetText("PlayerThreatText", threat);
+                if (threatBadge != null)
+                    threatBadge.IsVisible = !string.IsNullOrEmpty(threat);
             }
             else
             {
@@ -75,6 +100,13 @@ namespace PRoCon.UI.Views
                 SetText("PlayerKDText", $"{_selectedPlayers.Sum(p => p.Kills)}/{_selectedPlayers.Sum(p => p.Deaths)}");
                 SetText("PlayerPingText", "--");
                 SetText("PlayerSquadText", "--");
+                SetText("PlayerIPText", "");
+                SetText("PlayerCountryText", "");
+                SetText("PlayerThreatText", "");
+                var locationRow = this.FindControl<StackPanel>("LocationRow");
+                if (locationRow != null) locationRow.IsVisible = false;
+                var threatBadge = this.FindControl<Avalonia.Controls.Border>("ThreatBadge");
+                if (threatBadge != null) threatBadge.IsVisible = false;
                 SetStatus(names);
             }
         }
@@ -86,7 +118,21 @@ namespace PRoCon.UI.Views
             SetText("PlayerKDText", "--");
             SetText("PlayerPingText", "--");
             SetText("PlayerSquadText", "--");
+            SetText("PlayerIPText", "");
+            SetText("PlayerCountryText", "");
+            SetText("PlayerThreatText", "");
             SetText("ActionStatusText", "");
+            var locationRow = this.FindControl<StackPanel>("LocationRow");
+            if (locationRow != null) locationRow.IsVisible = false;
+            var threatBadge = this.FindControl<Avalonia.Controls.Border>("ThreatBadge");
+            if (threatBadge != null) threatBadge.IsVisible = false;
+        }
+
+        private void OnClearSelection(object sender, RoutedEventArgs e)
+        {
+            _selectedPlayers.Clear();
+            ClearPlayerInfo();
+            OnClearSelectionRequested?.Invoke();
         }
 
         // --- Actions ---

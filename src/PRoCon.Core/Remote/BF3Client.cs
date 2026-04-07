@@ -798,7 +798,6 @@ namespace PRoCon.Core.Remote
                             }
                         }
                     }
-                    lstPlayers.Clear();
                 }
             }
         }

@@ -125,6 +125,15 @@ SignalR WebSocket at `/layer` endpoint (`Layer/LayerHostService.cs` + `Layer/Lay
 ### Theme Engine
 `PRoCon.Themes` — Dark/Light Avalonia ResourceDictionaries. `ThemeManager` handles runtime switching.
 
+### Logging Subsystem
+`Logging/PRoConLogSetup.cs` — centralized init called once at startup by each entry point (UI, Console, Service). Creates an `ILoggerFactory` with file + optional console providers.
+
+`Logging/PRoConFileLoggerProvider.cs` — custom `ILoggerProvider` writing JSONL (one JSON object per line) to `Logs/procon.log`. Features: size-based rotation (10 MB × 10 files), thread-safe writes with periodic flush (2s), immediate flush on Warning+, graceful degradation if log dir is inaccessible.
+
+`Logging/PRoConLog.cs` — static accessor (`PRoConLog.For<T>()`) so any class can get an `ILogger` without constructor injection.
+
+Usage: `PRoConLogSetup.Initialize()` at startup, `PRoConLogSetup.Shutdown()` at exit. All code uses `PRoConLog.For<ClassName>()` or injects `ILogger<T>`.
+
 ## Key Directories
 
 ### `src/PRoCon.Core/`
@@ -138,6 +147,7 @@ SignalR WebSocket at `/layer` endpoint (`Layer/LayerHostService.cs` + `Layer/Lay
 - `Consoles/` — Chat, connection, plugin, PunkBuster console handlers
 - `Accounts/` — Account management and privilege system (`CPrivileges`)
 - `Battlemap/` — Map geometry and zone system
+- `Logging/` — PRoConLog, PRoConLogSetup, PRoConFileLoggerProvider (JSONL file logging)
 - `Localization/` — i18n (extracted from embedded resources at startup)
 
 ### `src/PRoCon.UI/`

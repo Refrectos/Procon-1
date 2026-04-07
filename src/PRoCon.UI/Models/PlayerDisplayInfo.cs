@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Avalonia.Media.Imaging;
 
 namespace PRoCon.UI.Models
 {
@@ -45,7 +46,7 @@ namespace PRoCon.UI.Models
             set { _isAlive = value; OnPropertyChanged(nameof(IsAlive)); OnPropertyChanged(nameof(StatusIcon)); }
         }
 
-        public string StatusIcon => IsAlive ? "" : "\u2620";
+        public string StatusIcon => IsAlive ? "" : "X";
 
         private string _country = "";
         public string Country
@@ -58,7 +59,13 @@ namespace PRoCon.UI.Models
         public string CountryCode
         {
             get => _countryCode;
-            set { _countryCode = value; OnPropertyChanged(nameof(CountryCode)); OnPropertyChanged(nameof(FlagText)); }
+            set
+            {
+                _countryCode = value;
+                OnPropertyChanged(nameof(CountryCode));
+                OnPropertyChanged(nameof(FlagText));
+                OnPropertyChanged(nameof(FlagImage));
+            }
         }
 
         private bool _isVPN;
@@ -79,21 +86,22 @@ namespace PRoCon.UI.Models
         public string KillsText => Kills.ToString();
         public string DeathsText => Deaths.ToString();
         public string PingText => Ping.ToString();
-        public string SquadText => Squad > 0 ? Squad.ToString() : "-";
+        public string SquadText => Squad > 0 ? $"S{Squad}" : "-";
         public string CountryText => !string.IsNullOrEmpty(Country) ? Country : "";
-        public string FlagText => CountryCodeToFlag(CountryCode);
+        public string FlagText => !string.IsNullOrEmpty(CountryCode) ? CountryCode.ToUpper() : "";
         public string ThreatText => IsVPN ? "VPN" : IsProxy ? "PROXY" : "";
 
-        private static string CountryCodeToFlag(string code)
+        /// <summary>
+        /// Flag image bitmap, loaded from cache. Set by the UI layer after FlagImageCache resolves.
+        /// </summary>
+        private Bitmap _flagImage;
+        public Bitmap FlagImage
         {
-            if (string.IsNullOrEmpty(code) || code.Length != 2
-                || !char.IsLetter(code[0]) || !char.IsLetter(code[1])) return "";
-            // Convert country code to regional indicator emoji
-            return string.Concat(
-                char.ConvertFromUtf32(0x1F1E6 + (code.ToUpper()[0] - 'A')),
-                char.ConvertFromUtf32(0x1F1E6 + (code.ToUpper()[1] - 'A'))
-            );
+            get => _flagImage;
+            set { _flagImage = value; OnPropertyChanged(nameof(FlagImage)); OnPropertyChanged(nameof(HasFlagImage)); }
         }
+
+        public bool HasFlagImage => _flagImage != null;
 
         public event PropertyChangedEventHandler PropertyChanged;
         private void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
