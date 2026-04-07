@@ -93,18 +93,8 @@ namespace PRoCon.Console
                         }
                     }
 
-                    // Interactive console mode (opt-in)
-                    bool interactive = false;
-                    for (int ia = 0; ia < args.Length; ia++)
-                    {
-                        if (string.Equals(args[ia], "--interactive", StringComparison.OrdinalIgnoreCase) ||
-                            string.Equals(args[ia], "-i", StringComparison.OrdinalIgnoreCase))
-                        {
-                            interactive = true;
-                            break;
-                        }
-                    }
-
+                    // Interactive console mode (on by default, --no-interactive to disable)
+                    bool interactive = !HasFlag(args, "--no-interactive");
                     if (interactive)
                     {
                         var interactiveConsole = new InteractiveConsole(application, exitEvent);

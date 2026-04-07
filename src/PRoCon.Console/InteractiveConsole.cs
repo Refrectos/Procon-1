@@ -14,6 +14,8 @@ namespace PRoCon.Console
         private PRoConClient _activeClient;
         private List<CPlayerInfo> _playerCache = new List<CPlayerInfo>();
         private readonly ManualResetEvent _exitEvent;
+        private Timer _statusTimer;
+        private bool _showDashboard = true;
 
         public InteractiveConsole(PRoConApplication application, ManualResetEvent exitEvent)
         {
@@ -36,8 +38,49 @@ namespace PRoCon.Console
                 Log($"Auto-selected: {_activeClient.HostNamePort}");
             }
 
+            // Show initial status after connections have time to establish
+            _statusTimer = new Timer(_ => PrintDashboard(), null, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(60));
+
             var inputThread = new Thread(InputLoop) { IsBackground = true };
             inputThread.Start();
+        }
+
+        private void PrintDashboard()
+        {
+            if (!_showDashboard) return;
+
+            try
+            {
+                int totalPlayers = 0;
+                int connectedCount = 0;
+                var lines = new List<string>();
+
+                foreach (PRoConClient client in _application.Connections)
+                {
+                    bool connected = client.Game?.IsLoggedIn == true;
+                    string state = connected ? "\u001b[32mON\u001b[0m " : "\u001b[31mOFF\u001b[0m";
+                    string serverName = client.CurrentServerInfo?.ServerName ?? client.HostNamePort;
+                    int players = client.CurrentServerInfo?.PlayerCount ?? 0;
+                    int maxPlayers = client.CurrentServerInfo?.MaxPlayerCount ?? 0;
+                    string map = client.CurrentServerInfo?.Map ?? "";
+                    string mode = client.CurrentServerInfo?.GameMode ?? "";
+
+                    if (connected) { connectedCount++; totalPlayers += players; }
+
+                    string info = connected
+                        ? $"  {state} {serverName,-40} {players,2}/{maxPlayers,-2}  {map} {mode}"
+                        : $"  {state} {client.HostNamePort,-40} --";
+                    lines.Add(info);
+                }
+
+                System.Console.WriteLine();
+                System.Console.WriteLine($"\u001b[36m━━━ PRoCon Status ━━━\u001b[0m  {connectedCount}/{_application.Connections.Count} servers  |  {totalPlayers} players  |  {DateTime.Now:HH:mm:ss}");
+                foreach (var line in lines)
+                    System.Console.WriteLine(line);
+                System.Console.WriteLine($"\u001b[36m━━━━━━━━━━━━━━━━━━━━━\u001b[0m");
+                System.Console.WriteLine();
+            }
+            catch { }
         }
 
         private void InputLoop()
@@ -72,6 +115,14 @@ namespace PRoCon.Console
                 case "help":
                 case "?":
                     PrintHelp();
+                    break;
+                case "dashboard":
+                case "dash":
+                    PrintDashboard();
+                    break;
+                case "watch":
+                    _showDashboard = !_showDashboard;
+                    Log($"Auto-dashboard: {(_showDashboard ? "ON (every 60s)" : "OFF")}");
                     break;
                 case "servers":
                     ListServers();
@@ -118,6 +169,8 @@ namespace PRoCon.Console
         private void PrintHelp()
         {
             Log("Commands:");
+            Log("  dashboard / dash  - Show server status overview");
+            Log("  watch             - Toggle auto-dashboard (every 60s)");
             Log("  servers           - List connected servers");
             Log("  select <N>        - Select server by number");
             Log("  status            - Show selected server status");
@@ -162,10 +215,27 @@ namespace PRoCon.Console
             var game = _activeClient.Game;
             if (game == null) { Log("Not connected."); return; }
 
-            Log($"Server:  {_activeClient.HostNamePort}");
+            var info = _activeClient.CurrentServerInfo;
+            Log($"Server:  {info?.ServerName ?? _activeClient.HostNamePort}");
+            Log($"Address: {_activeClient.HostNamePort}");
             Log($"Logged:  {(game.IsLoggedIn ? "yes" : "no")}");
             Log($"Game:    {game.GameType ?? "unknown"}");
             Log($"Version: {game.FriendlyVersionNumber ?? game.VersionNumber ?? "?"}");
+            if (info != null)
+            {
+                Log($"Map:     {info.Map ?? "?"} ({info.GameMode ?? "?"})");
+                Log($"Players: {info.PlayerCount}/{info.MaxPlayerCount}");
+                Log($"Round:   {info.CurrentRound + 1}/{info.TotalRounds}");
+                if (info.TeamScores != null)
+                {
+                    foreach (var ts in info.TeamScores)
+                    {
+                        string teamName = _activeClient.GetLocalizedTeamName(ts.TeamID, info.Map, info.GameMode);
+                        if (string.IsNullOrEmpty(teamName)) teamName = $"Team {ts.TeamID}";
+                        Log($"  {teamName}: {ts.Score} tickets");
+                    }
+                }
+            }
         }
 
         private void ListPlayers()
