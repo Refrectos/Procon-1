@@ -234,7 +234,7 @@ namespace PRoCon.UI.Views
             var passwordInput = this.FindControl<TextBox>("AccountPasswordInput");
 
             string username = usernameInput?.Text?.Trim() ?? "";
-            string password = passwordInput?.Text ?? "";
+            string password = passwordInput?.Text?.Trim() ?? "";
 
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
                 return;
@@ -273,7 +273,7 @@ namespace PRoCon.UI.Views
             var passwordInput = this.FindControl<TextBox>("AccountPasswordInput");
 
             string username = usernameInput?.Text?.Trim() ?? "";
-            string password = passwordInput?.Text ?? "";
+            string password = passwordInput?.Text?.Trim() ?? "";
 
             if (string.IsNullOrEmpty(username))
                 username = _selectedAccountName ?? "";
