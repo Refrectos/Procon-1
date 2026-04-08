@@ -356,10 +356,75 @@ jobs:
       - name: Generate checksums
         run: sha256sum Procon-*.tar.gz PRoCon-*.exe 2>/dev/null > checksums-sha256.txt || sha256sum Procon-*.tar.gz > checksums-sha256.txt
 
+      - name: Generate release notes from commits
+        id: notes
+        shell: bash
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 ${TAG}^ 2>/dev/null || echo "")
+          if [ -z "$PREV_TAG" ]; then
+            RANGE="${TAG}"
+          else
+            RANGE="${PREV_TAG}..${TAG}"
+          fi
+
+          # Collect commits by conventional commit type
+          FEATURES=$(git log --max-count=50 --pretty=format:"%s" ${RANGE} | grep -iE "^feat(\(.+\))?:" | sed 's/^feat\([^)]*\)\?: //' || true)
+          FIXES=$(git log --max-count=50 --pretty=format:"%s" ${RANGE} | grep -iE "^fix(\(.+\))?:" | sed 's/^fix\([^)]*\)\?: //' || true)
+          DOCS=$(git log --max-count=50 --pretty=format:"%s" ${RANGE} | grep -iE "^docs(\(.+\))?:" | sed 's/^docs\([^)]*\)\?: //' || true)
+          CHORES=$(git log --max-count=50 --pretty=format:"%s" ${RANGE} | grep -iE "^(chore|refactor|perf|ci|build)(\(.+\))?:" | sed 's/^[a-z]*\([^)]*\)\?: //' || true)
+
+          # Build markdown body
+          BODY=""
+
+          if [ -n "$FEATURES" ]; then
+            BODY="${BODY}## 🚀 New Features\n\n"
+            while IFS= read -r line; do
+              BODY="${BODY}- ${line}\n"
+            done <<< "$FEATURES"
+            BODY="${BODY}\n"
+          fi
+
+          if [ -n "$FIXES" ]; then
+            BODY="${BODY}## 🐛 Bug Fixes\n\n"
+            while IFS= read -r line; do
+              BODY="${BODY}- ${line}\n"
+            done <<< "$FIXES"
+            BODY="${BODY}\n"
+          fi
+
+          if [ -n "$DOCS" ]; then
+            BODY="${BODY}## 📖 Documentation\n\n"
+            while IFS= read -r line; do
+              BODY="${BODY}- ${line}\n"
+            done <<< "$DOCS"
+            BODY="${BODY}\n"
+          fi
+
+          if [ -n "$CHORES" ]; then
+            BODY="${BODY}## 🧹 Maintenance\n\n"
+            while IFS= read -r line; do
+              BODY="${BODY}- ${line}\n"
+            done <<< "$CHORES"
+            BODY="${BODY}\n"
+          fi
+
+          if [ -z "$BODY" ]; then
+            BODY="See commit history for changes.\n"
+          fi
+
+          if [ -n "$PREV_TAG" ]; then
+            BODY="${BODY}**Full Changelog**: https://github.com/${GITHUB_REPOSITORY}/compare/${PREV_TAG}...${TAG}\n"
+          fi
+
+          # Write to file to avoid escaping issues
+          echo -e "$BODY" > release-notes.md
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
+          body_path: release-notes.md
           prerelease: ${{ steps.release_type.outputs.prerelease == 'true' }}
           files: |
             Procon-*.tar.gz
@@ -372,13 +437,15 @@ jobs:
         shell: bash
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DISCORD_THREAD_ID: ${{ secrets.DISCORD_THREAD_ID }}
           TAG: ${{ github.ref_name }}
           IS_PRE: ${{ steps.release_type.outputs.prerelease }}
           REPO: ${{ github.repository }}
         run: |
           VERSION="${TAG#v}"
           RELEASE_URL="https://github.com/${REPO}/releases/tag/${TAG}"
-          COMPARE_URL="https://github.com/${REPO}/compare/$(git describe --tags --abbrev=0 ${TAG}^)...${TAG}"
+          PREV_TAG=$(git describe --tags --abbrev=0 ${TAG}^ 2>/dev/null || echo "")
+          COMPARE_URL="https://github.com/${REPO}/compare/${PREV_TAG:-${TAG}}...${TAG}"
 
           if [ "$IS_PRE" = "true" ]; then
             TITLE="🚀 PRoCon ${VERSION} Pre-Release"
@@ -390,55 +457,123 @@ jobs:
             BADGE="✅ STABLE"
           fi
 
-          # Get commit messages since last tag for changelog
-          PREV_TAG=$(git describe --tags --abbrev=0 ${TAG}^ 2>/dev/null || echo "")
+          # Build categorized changelog from conventional commits
           if [ -n "$PREV_TAG" ]; then
-            CHANGELOG=$(git log --pretty=format:"• %s" ${PREV_TAG}..${TAG} | head -15)
+            RANGE="${PREV_TAG}..${TAG}"
           else
-            CHANGELOG="• Initial release"
+            RANGE="${TAG}"
           fi
 
-          # Build asset list
-          ASSETS=""
+          FEATURES=$(git log --max-count=50 --pretty=format:"%s" ${RANGE} | grep -iE "^feat(\(.+\))?:" | sed 's/^feat\([^)]*\)\?: //' || true)
+          FIXES=$(git log --max-count=50 --pretty=format:"%s" ${RANGE} | grep -iE "^fix(\(.+\))?:" | sed 's/^fix\([^)]*\)\?: //' || true)
+          OTHER=$(git log --max-count=50 --pretty=format:"%s" ${RANGE} | grep -iE "^(chore|refactor|perf|docs|ci|build)(\(.+\))?:" | sed 's/^[a-z]*\([^)]*\)\?: //' || true)
+          TOTAL=$(git log --max-count=50 --oneline ${RANGE} | wc -l || true)
+
+          # Build changelog text with category headers
+          # Discord field limit is 1024 chars — build incrementally and truncate
+          CHANGELOG=""
+          if [ -n "$FEATURES" ]; then
+            CHANGELOG+="**🚀 Features**"$'\n'
+            while IFS= read -r line; do
+              CHANGELOG+="• ${line}"$'\n'
+            done <<< "$FEATURES"
+          fi
+          if [ -n "$FIXES" ]; then
+            CHANGELOG+="**🐛 Fixes**"$'\n'
+            while IFS= read -r line; do
+              CHANGELOG+="• ${line}"$'\n'
+            done <<< "$FIXES"
+          fi
+          if [ -n "$OTHER" ]; then
+            CHANGELOG+="**🧹 Other**"$'\n'
+            while IFS= read -r line; do
+              CHANGELOG+="• ${line}"$'\n'
+            done <<< "$OTHER"
+          fi
+
+          if [ -z "$CHANGELOG" ]; then
+            CHANGELOG="See release notes for details."
+          fi
+
+          # Truncate to fit Discord's 1024 char field limit
+          if [ ${#CHANGELOG} -gt 980 ]; then
+            CHANGELOG="${CHANGELOG:0:960}"$'\n'"… and more — see release notes"
+          fi
+
+          # Build description with real newlines
+          DESCRIPTION="${BADGE}"$'\n\n'"PRoCon Frostbite RCON Tool — a new version is ready to download."
+
+          # Build downloads field
+          DOWNLOADS=""
           for f in PRoCon-*.exe; do
-            [ -f "$f" ] && ASSETS="${ASSETS}🖥️ **Windows Installer**: \`${f}\`\n"
+            [ -f "$f" ] && DOWNLOADS+="🖥️ **Windows Installer**: \`${f}\`"$'\n'
           done
-          ASSETS="${ASSETS}🐧 Linux (x64, arm64)\n"
-          ASSETS="${ASSETS}🍎 macOS (x64, arm64)\n"
-          ASSETS="${ASSETS}🔒 SHA256 checksums"
+          DOWNLOADS+="🐧 Linux (x64, arm64)"$'\n'
+          DOWNLOADS+="🍎 macOS (x64, arm64)"$'\n'
+          DOWNLOADS+="🔒 SHA256 checksums"
 
-          # Platform count
-          ARCHIVE_COUNT=$(ls Procon-*.tar.gz 2>/dev/null | wc -l)
-
-          DESCRIPTION="${BADGE}\n\nPRoCon Frostbite RCON Tool — a new version is ready to download."
+          ARCHIVE_COUNT=$(ls Procon-*.tar.gz 2>/dev/null | wc -l || true)
           LINKS="[📥 Download](${RELEASE_URL}) • [📝 Full Changelog](${COMPARE_URL}) • [⭐ GitHub](https://github.com/${REPO})"
           FOOTER="PRoCon Frostbite • ${VERSION} • $(date -u +'%B %d, %Y')"
           TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           THUMB_URL="https://raw.githubusercontent.com/${REPO}/master/src/PRoCon.UI/Assets/myrcon_logo.png"
 
-          # Build JSON with jq to handle all escaping correctly
+          # Build content summary with counts and feature highlights
+          FEAT_COUNT=$(echo "$FEATURES" | grep -c . || true)
+          FIX_COUNT=$(echo "$FIXES" | grep -c . || true)
+          OTHER_COUNT=$(echo "$OTHER" | grep -c . || true)
+
+          SUMMARY=""
+          [ "$FEAT_COUNT" -gt 0 ] 2>/dev/null && SUMMARY+="**${FEAT_COUNT}** new feature"
+          [ "$FEAT_COUNT" -gt 1 ] 2>/dev/null && SUMMARY+="s"
+          if [ "$FIX_COUNT" -gt 0 ] 2>/dev/null; then
+            [ -n "$SUMMARY" ] && SUMMARY+=", "
+            SUMMARY+="**${FIX_COUNT}** bug fix"
+            [ "$FIX_COUNT" -gt 1 ] 2>/dev/null && SUMMARY+="es"
+          fi
+          if [ "$OTHER_COUNT" -gt 0 ] 2>/dev/null; then
+            [ -n "$SUMMARY" ] && SUMMARY+=", "
+            SUMMARY+="**${OTHER_COUNT}** other change"
+            [ "$OTHER_COUNT" -gt 1 ] 2>/dev/null && SUMMARY+="s"
+          fi
+
+          # Pick up to 3 feature highlights (first line of each)
+          HIGHLIGHTS=$(echo "$FEATURES" | head -3 | sed 's/^/• /')
+
+          if [ "$IS_PRE" = "true" ]; then
+            CONTENT="@here — **PRoCon ${VERSION}** pre-release is out! 🧪"
+          else
+            CONTENT="@everyone — **PRoCon ${VERSION}** is now available! 🎉"
+          fi
+          [ -n "$SUMMARY" ] && CONTENT+=$'\n'"${SUMMARY}"
+          if [ -n "$HIGHLIGHTS" ]; then
+            CONTENT+=$'\n\n'"**Highlights:**"$'\n'"${HIGHLIGHTS}"
+            [ "$FEAT_COUNT" -gt 3 ] 2>/dev/null && CONTENT+=$'\n'"… and more below"
+          fi
+
           PAYLOAD=$(jq -n \
+            --arg content "$CONTENT" \
             --arg title "$TITLE" \
             --arg url "$RELEASE_URL" \
             --argjson color "$COLOR" \
             --arg description "$DESCRIPTION" \
             --arg changelog "$CHANGELOG" \
-            --arg downloads "$ASSETS" \
+            --arg downloads "$DOWNLOADS" \
             --arg links "$LINKS" \
             --arg thumb "$THUMB_URL" \
             --arg footer "$FOOTER" \
             --arg timestamp "$TIMESTAMP" \
             --arg archive_count "$ARCHIVE_COUNT" \
             '{
-              content: null,
+              content: $content,
               embeds: [{
                 title: $title,
                 url: $url,
                 color: $color,
                 description: $description,
                 fields: [
-                  { name: "📋 Changes", value: $changelog, inline: false },
-                  { name: ("📦 Downloads (" + $archive_count + " platforms)"), value: $downloads, inline: false },
+                  { name: ("📋 Changes (" + ($archive_count | tostring) + " commits)"), value: $changelog, inline: false },
+                  { name: "📦 Downloads", value: $downloads, inline: false },
                   { name: "🔗 Links", value: $links, inline: false }
                 ],
                 thumbnail: { url: $thumb },
@@ -448,3 +583,10 @@ jobs:
             }')
 
           curl -sf -H "Content-Type: application/json" -d "$PAYLOAD" "$DISCORD_WEBHOOK"
+
+          # Optionally ping a thread with a short summary
+          if [ -n "$DISCORD_THREAD_ID" ]; then
+            THREAD_MSG="📢 **PRoCon ${VERSION}** has been released — [View Release](${RELEASE_URL})"
+            THREAD_PAYLOAD=$(jq -n --arg content "$THREAD_MSG" '{content: $content}')
+            curl -sf -H "Content-Type: application/json" -d "$THREAD_PAYLOAD" "${DISCORD_WEBHOOK}?thread_id=${DISCORD_THREAD_ID}"
+          fi
