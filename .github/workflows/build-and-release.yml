@@ -368,6 +368,7 @@ jobs:
 
       - name: Notify Discord
         if: success()
+        continue-on-error: true
         shell: bash
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
@@ -396,51 +397,54 @@ jobs:
           else
             CHANGELOG="• Initial release"
           fi
-          # Escape for JSON
-          CHANGELOG=$(echo "$CHANGELOG" | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
 
           # Build asset list
           ASSETS=""
           for f in PRoCon-*.exe; do
-            [ -f "$f" ] && ASSETS="${ASSETS}🖥️ **Windows Installer**: \`${f}\`\\n"
+            [ -f "$f" ] && ASSETS="${ASSETS}🖥️ **Windows Installer**: \`${f}\`\n"
           done
-          ASSETS="${ASSETS}🐧 Linux (x64, arm64)\\n"
-          ASSETS="${ASSETS}🍎 macOS (x64, arm64)\\n"
+          ASSETS="${ASSETS}🐧 Linux (x64, arm64)\n"
+          ASSETS="${ASSETS}🍎 macOS (x64, arm64)\n"
           ASSETS="${ASSETS}🔒 SHA256 checksums"
 
           # Platform count
           ARCHIVE_COUNT=$(ls Procon-*.tar.gz 2>/dev/null | wc -l)
 
-          curl -sf -H "Content-Type: application/json" -d "{
-            \"content\": null,
-            \"embeds\": [{
-              \"title\": \"${TITLE}\",
-              \"url\": \"${RELEASE_URL}\",
-              \"color\": ${COLOR},
-              \"description\": \"${BADGE}\\n\\nPRoCon Frostbite RCON Tool — a new version is ready to download.\",
-              \"fields\": [
-                {
-                  \"name\": \"📋 Changes\",
-                  \"value\": \"${CHANGELOG}\",
-                  \"inline\": false
-                },
-                {
-                  \"name\": \"📦 Downloads (${ARCHIVE_COUNT} platforms)\",
-                  \"value\": \"${ASSETS}\",
-                  \"inline\": false
-                },
-                {
-                  \"name\": \"🔗 Links\",
-                  \"value\": \"[📥 Download](${RELEASE_URL}) • [📝 Full Changelog](${COMPARE_URL}) • [⭐ GitHub](https://github.com/${REPO})\",
-                  \"inline\": false
-                }
-              ],
-              \"thumbnail\": {
-                \"url\": \"https://raw.githubusercontent.com/${REPO}/master/src/PRoCon.UI/Assets/myrcon_logo.png\"
-              },
-              \"footer\": {
-                \"text\": \"PRoCon Frostbite • ${VERSION} • $(date -u +%B\\ %d,\\ %Y)\"
-              },
-              \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
-            }]
-          }" "$DISCORD_WEBHOOK"
+          DESCRIPTION="${BADGE}\n\nPRoCon Frostbite RCON Tool — a new version is ready to download."
+          LINKS="[📥 Download](${RELEASE_URL}) • [📝 Full Changelog](${COMPARE_URL}) • [⭐ GitHub](https://github.com/${REPO})"
+          FOOTER="PRoCon Frostbite • ${VERSION} • $(date -u +'%B %d, %Y')"
+          TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          THUMB_URL="https://raw.githubusercontent.com/${REPO}/master/src/PRoCon.UI/Assets/myrcon_logo.png"
+
+          # Build JSON with jq to handle all escaping correctly
+          PAYLOAD=$(jq -n \
+            --arg title "$TITLE" \
+            --arg url "$RELEASE_URL" \
+            --argjson color "$COLOR" \
+            --arg description "$DESCRIPTION" \
+            --arg changelog "$CHANGELOG" \
+            --arg downloads "$ASSETS" \
+            --arg links "$LINKS" \
+            --arg thumb "$THUMB_URL" \
+            --arg footer "$FOOTER" \
+            --arg timestamp "$TIMESTAMP" \
+            --arg archive_count "$ARCHIVE_COUNT" \
+            '{
+              content: null,
+              embeds: [{
+                title: $title,
+                url: $url,
+                color: $color,
+                description: $description,
+                fields: [
+                  { name: "📋 Changes", value: $changelog, inline: false },
+                  { name: ("📦 Downloads (" + $archive_count + " platforms)"), value: $downloads, inline: false },
+                  { name: "🔗 Links", value: $links, inline: false }
+                ],
+                thumbnail: { url: $thumb },
+                footer: { text: $footer },
+                timestamp: $timestamp
+              }]
+            }')
+
+          curl -sf -H "Content-Type: application/json" -d "$PAYLOAD" "$DISCORD_WEBHOOK"
