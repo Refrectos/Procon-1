@@ -306,6 +306,65 @@ namespace PRoCon.Core.Plugin
             catch { return null; }
         }
 
+        /// <summary>
+        /// Extracts a loaded assembly's PE image to disk for Roslyn compilation references.
+        /// Used in single-file publish where Assembly.Location is empty.
+        /// </summary>
+        private static bool TryWriteAssemblyImage(Assembly assembly, string destPath)
+        {
+            try
+            {
+                // In single-file publish, assemblies are loaded in memory with no file path.
+                // Search the NuGet package cache to find the original DLL for Roslyn references.
+                string nugetCache = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    ".nuget", "packages");
+
+                if (Directory.Exists(nugetCache))
+                {
+                    string assemblyName = assembly.GetName().Name;
+                    string version = assembly.GetName().Version?.ToString();
+                    if (assemblyName != null && version != null)
+                    {
+                        // Try common NuGet package layout: packages/{name}/{version}/lib/net*/
+                        string packageDir = Path.Combine(nugetCache, assemblyName.ToLowerInvariant(), version);
+                        if (!Directory.Exists(packageDir))
+                        {
+                            // Try with fewer version segments
+                            var versionObj = assembly.GetName().Version;
+                            if (versionObj != null)
+                            {
+                                string shortVersion = $"{versionObj.Major}.{versionObj.Minor}.{versionObj.Build}";
+                                packageDir = Path.Combine(nugetCache, assemblyName.ToLowerInvariant(), shortVersion);
+                            }
+                        }
+
+                        if (Directory.Exists(packageDir))
+                        {
+                            string dllName = assemblyName + ".dll";
+                            var candidates = Directory.GetFiles(packageDir, dllName, SearchOption.AllDirectories);
+                            // Prefer net8.0, then net6.0, then netstandard2.0
+                            string match = candidates
+                                .OrderByDescending(f => f.Contains("net8.0") ? 3 : f.Contains("net6.0") ? 2 : f.Contains("netstandard") ? 1 : 0)
+                                .FirstOrDefault();
+
+                            if (match != null && File.Exists(match))
+                            {
+                                File.Copy(match, destPath, true);
+                                return true;
+                            }
+                        }
+                    }
+                }
+
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         private void WritePluginConsole(string strFormat, params object[] arguments)
         {
             if (PluginOutput != null)
@@ -615,6 +674,11 @@ namespace PRoCon.Core.Plugin
                     {
                         // Single-file fallback — copy from assembly location in NuGet cache or runtime
                         File.Copy(kvp.Value.Location, dest, true);
+                    }
+                    else if (kvp.Value != null && TryWriteAssemblyImage(kvp.Value, dest))
+                    {
+                        // Single-file publish — assembly is in memory with no file path,
+                        // extract image bytes from the loaded module
                     }
                     else
                     {

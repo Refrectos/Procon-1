@@ -42,4 +42,25 @@
     <AvaloniaResource Include="Assets\myrcon_logo.png" />
   </ItemGroup>
 
+  <!-- Exclude plugin-referenced DLLs from single-file bundling so they remain
+       as loose files for Roslyn plugin compilation references -->
+  <Target Name="ExcludePluginDepsFromBundle" AfterTargets="ComputeResolvedFilesToPublishList"
+          Condition="'$(PublishSingleFile)' == 'true'">
+    <ItemGroup>
+      <ResolvedFileToPublish Update="@(ResolvedFileToPublish)"
+        Condition="%(Filename) == 'PRoCon.Core' Or
+                   %(Filename) == 'MySqlConnector' Or
+                   %(Filename) == 'Newtonsoft.Json' Or
+                   %(Filename) == 'Dapper' Or
+                   %(Filename) == 'Flurl' Or
+                   %(Filename) == 'Flurl.Http' Or
+                   %(Filename) == 'Microsoft.Data.Sqlite' Or
+                   %(Filename) == 'SQLitePCLRaw.core' Or
+                   %(Filename) == 'SQLitePCLRaw.provider.e_sqlite3' Or
+                   %(Filename) == 'SQLitePCLRaw.batteries_v2'">
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
+
 </Project>
