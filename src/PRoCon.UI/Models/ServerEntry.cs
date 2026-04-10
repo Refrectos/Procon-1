@@ -3,9 +3,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using PRoCon.Core;
 using PRoCon.Core.Logging;
 using PRoCon.UI.Services;
+using PRoCon.UI.Views;
 
 namespace PRoCon.UI.Models
 {
@@ -34,7 +36,7 @@ namespace PRoCon.UI.Models
         public string ServerName
         {
             get => _serverName;
-            set { _serverName = value; Notify(nameof(ServerName)); Notify(nameof(DisplayLabel)); Notify(nameof(DisplayName)); Notify(nameof(IsNameOverflow)); }
+            set { _serverName = value; Notify(nameof(ServerName)); Notify(nameof(DisplayLabel)); Notify(nameof(DisplayName)); Notify(nameof(IsNameOverflow)); Notify(nameof(Initials)); Notify(nameof(TooltipLine1)); }
         }
 
         private string _gameType;
@@ -51,7 +53,7 @@ namespace PRoCon.UI.Models
         public ServerConnectionState State
         {
             get => _state;
-            set { _state = value; Notify(nameof(State)); Notify(nameof(IsConnected)); Notify(nameof(IsPulsing)); Notify(nameof(StatusColor)); Notify(nameof(DisplayName)); }
+            set { _state = value; Notify(nameof(State)); Notify(nameof(IsConnected)); Notify(nameof(IsPulsing)); Notify(nameof(StatusColor)); Notify(nameof(DisplayName)); Notify(nameof(TooltipLine2)); }
         }
 
         public bool IsConnected => _state == ServerConnectionState.Connected;
@@ -115,7 +117,13 @@ namespace PRoCon.UI.Models
         // Fast lookup by soldier name for kill/spawn event updates
         public ConcurrentDictionary<string, PlayerDisplayInfo> PlayerLookup { get; } = new ConcurrentDictionary<string, PlayerDisplayInfo>(StringComparer.OrdinalIgnoreCase);
         public string ServerInfoText { get; set; } = "";
-        public CServerInfo LastServerInfo { get; set; }
+
+        private CServerInfo _lastServerInfo;
+        public CServerInfo LastServerInfo
+        {
+            get => _lastServerInfo;
+            set { _lastServerInfo = value; Notify(nameof(LastServerInfo)); Notify(nameof(TooltipLine2)); }
+        }
 
         // Dashboard data
         public List<(DateTime Time, int Count)> PlayerHistory { get; } = new List<(DateTime, int)>();
@@ -166,14 +174,14 @@ namespace PRoCon.UI.Models
         public int PlayerCount
         {
             get => _playerCount;
-            set { _playerCount = value; Notify(nameof(PlayerCount)); Notify(nameof(PlayerCountText)); Notify(nameof(HasPlayerCount)); }
+            set { _playerCount = value; Notify(nameof(PlayerCount)); Notify(nameof(PlayerCountText)); Notify(nameof(HasPlayerCount)); Notify(nameof(TooltipLine2)); }
         }
 
         private int _maxPlayerCount;
         public int MaxPlayerCount
         {
             get => _maxPlayerCount;
-            set { _maxPlayerCount = value; Notify(nameof(MaxPlayerCount)); Notify(nameof(PlayerCountText)); Notify(nameof(HasPlayerCount)); }
+            set { _maxPlayerCount = value; Notify(nameof(MaxPlayerCount)); Notify(nameof(PlayerCountText)); Notify(nameof(HasPlayerCount)); Notify(nameof(TooltipLine2)); }
         }
 
         public string PlayerCountText => $"{PlayerCount}/{MaxPlayerCount}";
@@ -181,6 +189,52 @@ namespace PRoCon.UI.Models
 
         // Marquee for long names (> ~25 chars at 12px font in available sidebar width)
         public bool IsNameOverflow => (DisplayName?.Length ?? 0) > 25;
+
+        // Sidebar icon initials (2-3 chars)
+        public string Initials
+        {
+            get
+            {
+                string name = !string.IsNullOrEmpty(ServerName) ? ServerName : HostPort;
+                if (string.IsNullOrEmpty(name))
+                    return "?";
+
+                var words = name.Split(new[] { ' ', '-', '_', '|', '#' }, StringSplitOptions.RemoveEmptyEntries);
+                if (words.Length >= 2)
+                    return string.Concat(words.Take(3).Select(w => char.ToUpper(w[0])));
+
+                return name.Length <= 3 ? name.ToUpper() : name.Substring(0, 3).ToUpper();
+            }
+        }
+
+        // Tooltip properties for sidebar server icon
+        public string TooltipLine1 => !string.IsNullOrEmpty(ServerName) ? ServerName : HostPort;
+
+        public string TooltipLine2
+        {
+            get
+            {
+                if (!IsConnected)
+                    return _state == ServerConnectionState.Connecting ? "Connecting..." : "Disconnected";
+
+                var parts = new List<string>();
+                if (MaxPlayerCount > 0)
+                    parts.Add($"{PlayerCount}/{MaxPlayerCount}");
+
+                if (LastServerInfo != null)
+                {
+                    if (!string.IsNullOrEmpty(LastServerInfo.Map))
+                        parts.Add(GameData.GetMapName(LastServerInfo.Map));
+                    if (!string.IsNullOrEmpty(LastServerInfo.GameMode))
+                        parts.Add(GameData.GetModeName(LastServerInfo.GameMode));
+                }
+
+                return parts.Count > 0 ? string.Join(" | ", parts) : "Connected";
+            }
+        }
+
+        public string TooltipLayerInfo => IsLayerConnection ? $"Layer via {LayerUsername}@{HostPort}" : null;
+        public bool HasTooltipLayerInfo => !string.IsNullOrEmpty(TooltipLayerInfo);
 
         public event PropertyChangedEventHandler PropertyChanged;
         private void Notify(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));

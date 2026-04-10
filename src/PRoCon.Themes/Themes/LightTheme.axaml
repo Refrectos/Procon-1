@@ -201,4 +201,26 @@
   <SolidColorBrush x:Key="ConsoleReceivedBrush" Color="#226644" />
   <SolidColorBrush x:Key="ConsoleEventBrush" Color="#886622" />
 
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- Server Sidebar                              -->
+  <!-- ═══════════════════════════════════════════ -->
+  <SolidColorBrush x:Key="SidebarBackgroundBrush" Color="#e3e5e8" />
+  <SolidColorBrush x:Key="SidebarIconBrush" Color="#f2f3f5" />
+  <SolidColorBrush x:Key="SidebarIconHoverBrush" Color="#d4d6da" />
+  <SolidColorBrush x:Key="SidebarIconActiveBrush" Color="#5865f2" />
+  <SolidColorBrush x:Key="SidebarIconTextBrush" Color="#6d6f78" />
+  <SolidColorBrush x:Key="SidebarSeparatorBrush" Color="#d4d6da" />
+  <SolidColorBrush x:Key="SidebarLabelBrush" Color="#8e9297" />
+  <SolidColorBrush x:Key="SidebarPillBrush" Color="#060607" />
+  <SolidColorBrush x:Key="SidebarBadgeBrush" Color="#ed4245" />
+  <SolidColorBrush x:Key="SidebarLayerBrush" Color="#e3e5e8" />
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- Custom Title Bar                            -->
+  <!-- ═══════════════════════════════════════════ -->
+  <SolidColorBrush x:Key="TitleBarBrush" Color="#f2f3f5" />
+  <SolidColorBrush x:Key="TitleBarTextBrush" Color="#6d6f78" />
+  <SolidColorBrush x:Key="WindowCloseHoverBrush" Color="#ed4245" />
+  <SolidColorBrush x:Key="WindowButtonHoverBrush" Color="#d4d6da" />
+
 </ResourceDictionary>

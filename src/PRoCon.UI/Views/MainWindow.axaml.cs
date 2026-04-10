@@ -73,7 +73,7 @@ namespace PRoCon.UI.Views
         private OptionsPanel _optionsPanel;
 
         // Cached control references (populated by CacheControls)
-        private ListBox _serverList;
+        private ItemsControl _serverSidebar;
         private ContentControl _mapListContent;
         private ContentControl _banListContent;
         private ContentControl _reservedSlotsContent;
@@ -158,7 +158,7 @@ namespace PRoCon.UI.Views
 
         private void CacheControls()
         {
-            _serverList = this.FindControl<ListBox>("ServerList");
+            _serverSidebar = this.FindControl<ItemsControl>("ServerSidebar");
             _mapListContent = this.FindControl<ContentControl>("MapListContent");
             _banListContent = this.FindControl<ContentControl>("BanListContent");
             _reservedSlotsContent = this.FindControl<ContentControl>("ReservedSlotsContent");
@@ -376,9 +376,9 @@ namespace PRoCon.UI.Views
 
                 // Note: CacheControls() is called at the end of this method.
                 // For these early assignments, use FindControl directly since cache isn't populated yet.
-                var serverList = this.FindControl<ListBox>("ServerList");
-                if (serverList != null)
-                    serverList.ItemsSource = _servers;
+                var serverSidebar = this.FindControl<ItemsControl>("ServerSidebar");
+                if (serverSidebar != null)
+                    serverSidebar.ItemsSource = _servers;
 
                 // Wire panels into ContentControls
                 var mapContent = this.FindControl<ContentControl>("MapListContent");
@@ -474,10 +474,16 @@ namespace PRoCon.UI.Views
                     _appVersion = infoVersion;
                     var versionRun = Avalonia.Controls.NameScope.GetNameScope(this)?.Find<Avalonia.Controls.Documents.Run>("VersionRun");
                     if (versionRun != null) versionRun.Text = $"v{_appVersion}";
-                    bool isAlphaChannel = infoVersion.Contains("-");
-                    _updateChecker = new PRoCon.Core.Updates.UpdateChecker(infoVersion, includePreReleases: isAlphaChannel);
-                    _updateChecker.UpdateAvailable += OnUpdateAvailable;
-                    _updateChecker.StartPeriodicCheck();
+
+                    // Only run update checker for tagged releases (contain a hyphen like "2.0.0-alpha.8")
+                    // Dev builds report "2.0.0" which will never match a release tag
+                    bool isTaggedRelease = infoVersion.Contains("-");
+                    if (isTaggedRelease)
+                    {
+                        _updateChecker = new PRoCon.Core.Updates.UpdateChecker(infoVersion, includePreReleases: true);
+                        _updateChecker.UpdateAvailable += OnUpdateAvailable;
+                        _updateChecker.StartPeriodicCheck();
+                    }
                     // Show What's New dialog after a short delay if version is newer than dismissed
                     Avalonia.Threading.DispatcherTimer.RunOnce(() => ShowWhatsNewIfNeeded(),
                         TimeSpan.FromSeconds(2));
@@ -1322,8 +1328,6 @@ namespace PRoCon.UI.Views
         {
             // Deselect server, show landing page
             _selectedServer = null;
-            if (_serverList != null) _serverList.SelectedItem = null;
-
             ClearServerContext();
             UpdateStatus("TextSecondaryBrush", $"PRoCon Frostbite v{_appVersion}");
             UpdateSidebarButtons();
@@ -1371,7 +1375,7 @@ namespace PRoCon.UI.Views
                 {
                     if (s is Border b && b.Tag is ServerEntry srv)
                     {
-                        if (_serverList != null) _serverList.SelectedItem = srv;
+                        _selectedServer = srv;
                         LoadServerView(srv);
                         UpdateSidebarButtons();
                         UpdateContentVisibility();
@@ -1516,7 +1520,7 @@ namespace PRoCon.UI.Views
                         entry.State = ServerConnectionState.Connecting;
                         client.AutomaticallyConnect = true;
 
-                        if (_serverList != null) _serverList.SelectedItem = entry;
+                        // _selectedServer already set above
 
                         LoadServerView(entry);
                         UpdateSidebarButtons();
@@ -1551,8 +1555,6 @@ namespace PRoCon.UI.Views
                     entry.State = ServerConnectionState.Connecting;
                     client.AutomaticallyConnect = true;
 
-                    if (_serverList != null) _serverList.SelectedItem = entry;
-
                     LoadServerView(entry);
                     UpdateSidebarButtons();
                     UpdateContentVisibility();
@@ -1568,34 +1570,60 @@ namespace PRoCon.UI.Views
             }
         }
 
-        private void OnServerSelected(object sender, SelectionChangedEventArgs e)
+        private void OnSidebarServerClick(object sender, RoutedEventArgs e)
         {
-            if (_serverList?.SelectedItem is not ServerEntry entry) return;
-
-            _selectedServer = entry;
-            ShowRemoveButton(true);
-
-            // Load this server's state into the view
-            LoadServerView(entry);
-            UpdateSidebarButtons();
-            UpdateContentVisibility();
-
-            // Immediately refresh player list for the newly selected server
-            var client = GetClient(entry.HostPort);
-            if (client?.Game != null && client.Game.IsLoggedIn)
+            if (sender is Button btn && btn.Tag is ServerEntry entry)
             {
-                client.Game.SendAdminListPlayersPacket(new CPlayerSubset(CPlayerSubset.PlayerSubsetType.All));
-                client.Game.SendServerinfoPacket();
-            }
+                _selectedServer = entry;
+                LoadServerView(entry);
+                UpdateSidebarButtons();
+                UpdateContentVisibility();
 
-            // Switch to Info if connected
-            if (entry.IsConnected || entry.State == ServerConnectionState.Connecting)
-                SwitchTab(6);
+                var client = GetClient(entry.HostPort);
+                if (client?.Game != null && client.Game.IsLoggedIn)
+                {
+                    client.Game.SendAdminListPlayersPacket(new CPlayerSubset(CPlayerSubset.PlayerSubsetType.All));
+                    client.Game.SendServerinfoPacket();
+                }
+
+                if (entry.IsConnected || entry.State == ServerConnectionState.Connecting)
+                    SwitchTab(6);
+            }
         }
 
-        private void OnServerDoubleClick(object sender, Avalonia.Input.TappedEventArgs e)
+        private void OnContextConnect(object sender, RoutedEventArgs e)
         {
-            ConnectSelectedServer();
+            if (sender is MenuItem mi && mi.DataContext is ServerEntry entry)
+            {
+                var client = GetClient(entry.HostPort);
+                if (client != null)
+                {
+                    client.AutomaticallyConnect = true;
+                    client.Connect();
+                }
+            }
+        }
+
+        private void OnContextDisconnect(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem mi && mi.DataContext is ServerEntry entry)
+            {
+                var client = GetClient(entry.HostPort);
+                if (client != null)
+                {
+                    client.AutomaticallyConnect = false;
+                    client.Shutdown();
+                }
+            }
+        }
+
+        private void OnContextEdit(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem mi && mi.DataContext is ServerEntry entry)
+            {
+                _selectedServer = entry;
+                OnEditServer(sender, e);
+            }
         }
 
         private void OnConnectSelected(object sender, RoutedEventArgs e)
@@ -1722,7 +1750,6 @@ namespace PRoCon.UI.Views
                 ShowEditButton(false);
                 ClearServerContext();
                 UpdateContentVisibility();
-                if (_serverList != null) _serverList.SelectedItem = null;
             }
 
             UpdateConnectionCount();
@@ -2151,6 +2178,8 @@ namespace PRoCon.UI.Views
 
         private void OnThemeToggle(object sender, RoutedEventArgs e) => App.ThemeManager.ToggleTheme();
 
+        private void OnToggleTheme(object sender, RoutedEventArgs e) => OnThemeToggle(sender, e);
+
         private async void OnOpenSettings(object sender, RoutedEventArgs e)
         {
             _optionsPanel.SetApplication(_application);
@@ -2158,6 +2187,33 @@ namespace PRoCon.UI.Views
             dialog.SetContent(_optionsPanel);
             await dialog.ShowDialog(this);
         }
+
+        private void OnOpenOptions(object sender, RoutedEventArgs e) => OnOpenSettings(sender, e);
+
+        private void OnMinimizeClick(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+
+        private void OnMaximizeClick(object sender, RoutedEventArgs e) =>
+            WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+
+        private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
+
+        private void OnTitleBarPointerPressed(object sender, Avalonia.Input.PointerPressedEventArgs e)
+        {
+            if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+            {
+                if (e.ClickCount == 2)
+                {
+                    // Double-click to maximize/restore
+                    WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+                }
+                else
+                {
+                    BeginMoveDrag(e);
+                }
+            }
+        }
+
+        private void OnDashboardClick(object sender, RoutedEventArgs e) => OnGoHome(sender, e);
 
         /// <summary>Static brush resolver for use in static methods.</summary>
         private static IBrush ResolveThemeBrush(string resourceKey)
@@ -2586,7 +2642,6 @@ namespace PRoCon.UI.Views
                     WireClientEvents(newClient, entry);
                     _selectedServer = entry;
                     newClient.AutomaticallyConnect = wasConnected;
-                    if (_serverList != null) _serverList.SelectedItem = entry;
                     LoadServerView(entry);
                 }
             }
@@ -2633,12 +2688,11 @@ namespace PRoCon.UI.Views
 
         private void SortAndGroupServers()
         {
-            // Sort: by GameType then ServerName/HostPort
-            var sorted = _servers.OrderBy(s => s.GameType ?? "ZZZ")
-                                 .ThenBy(s => s.DisplayName ?? s.HostPort)
-                                 .ToList();
+            var sorted = _servers
+                .OrderBy(s => string.IsNullOrEmpty(s.GameType) ? "~~~" : s.GameType)
+                .ThenBy(s => s.DisplayName ?? s.HostPort)
+                .ToList();
 
-            // Reorder the collection to match
             for (int i = 0; i < sorted.Count; i++)
             {
                 int currentIndex = _servers.IndexOf(sorted[i]);
@@ -2646,13 +2700,15 @@ namespace PRoCon.UI.Views
                     _servers.Move(currentIndex, i);
             }
 
-            // Update group headers: show header on first item of each game type
             string lastGame = null;
+            bool isFirst = true;
             foreach (var s in _servers)
             {
-                string game = s.GameType ?? "Unknown";
-                s.ShowGameHeader = game != lastGame;
+                string game = string.IsNullOrEmpty(s.GameType) ? "Pending" : s.GameType;
+                bool newGroup = game != lastGame;
+                s.ShowGameHeader = newGroup && !isFirst;
                 lastGame = game;
+                isFirst = false;
             }
         }
 

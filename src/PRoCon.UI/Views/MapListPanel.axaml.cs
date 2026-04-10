@@ -146,7 +146,7 @@ namespace PRoCon.UI.Views
                 _client.Game.MapListMapRemoved -= OnMapListMapRemoved;
                 _client.Game.MapListCleared -= OnMapListCleared;
             }
-            if (_client != null)
+            if (_client?.MapListPool != null)
             {
                 _client.MapListPool.ItemAdded -= OnMapPoolItemAdded;
             }
@@ -162,7 +162,8 @@ namespace PRoCon.UI.Views
                 _client.Game.MapListCleared += OnMapListCleared;
 
                 // Listen for MapListPool population from .def file loading
-                _client.MapListPool.ItemAdded += OnMapPoolItemAdded;
+                if (_client.MapListPool != null)
+                    _client.MapListPool.ItemAdded += OnMapPoolItemAdded;
 
                 // Populate GameData from the server's map pool so display names
                 // are always complete for whatever game/DLC is connected.
