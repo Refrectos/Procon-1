@@ -24,6 +24,7 @@ namespace PRoCon.UI.Views
         /// Callback set by MainWindow to open the What's New dialog.
         /// </summary>
         public Action OnOpenWhatsNewDialog { get; set; }
+        public Action OnLanguageSwitched { get; set; }
 
         public OptionsPanel()
         {
@@ -223,6 +224,8 @@ namespace PRoCon.UI.Views
                 }
 
                 SetStatus($"Language changed to: {item.Content}");
+                ApplyLocalization();
+                OnLanguageSwitched?.Invoke();
             }
         }
 
