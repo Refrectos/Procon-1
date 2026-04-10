@@ -372,6 +372,7 @@ namespace PRoCon.UI.Views
                 {
                     _application = new PRoConApplication(false, new string[0]);
                     _application.Execute();
+                    PRoCon.UI.Services.Loc.Initialize(_application);
                 }
 
                 // Note: CacheControls() is called at the end of this method.

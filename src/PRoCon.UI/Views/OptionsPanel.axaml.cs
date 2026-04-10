@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using PRoCon.Core;
+using PRoCon.Core.Localization;
 using PRoCon.Core.Remote;
 
 namespace PRoCon.UI.Views
@@ -63,11 +65,32 @@ namespace PRoCon.UI.Views
             if (apiKeyInput != null && options != null)
                 apiKeyInput.Text = options.ProxyCheckApiKey ?? "";
 
-            // Language
-            var currentLang = _application.CurrentLanguage;
-            var langText = this.FindControl<TextBlock>("CurrentLanguageText");
-            if (langText != null && currentLang != null)
-                langText.Text = $"Current: {currentLang.FileName}";
+            // Language dropdown
+            var langCombo = this.FindControl<ComboBox>("LanguageComboBox");
+            if (langCombo != null && _application.Languages != null)
+            {
+                var langItems = new List<ComboBoxItem>();
+                foreach (CLocalization lang in _application.Languages)
+                {
+                    string displayName = lang.GetDefaultLocalized(lang.FileName, "file.Language");
+                    langItems.Add(new ComboBoxItem { Content = displayName, Tag = lang.FileName });
+                }
+                langCombo.ItemsSource = langItems;
+
+                // Select current language
+                var currentLang = _application.CurrentLanguage;
+                if (currentLang != null)
+                {
+                    for (int i = 0; i < langItems.Count; i++)
+                    {
+                        if ((string)langItems[i].Tag == currentLang.FileName)
+                        {
+                            langCombo.SelectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+            }
 
             // Version from assembly — prefer InformationalVersion (includes pre-release suffix)
             var versionText = this.FindControl<TextBlock>("VersionText");
@@ -144,9 +167,14 @@ namespace PRoCon.UI.Views
         private void OnLanguageChanged(object sender, SelectionChangedEventArgs e)
         {
             var combo = this.FindControl<ComboBox>("LanguageComboBox");
-            if (combo?.SelectedItem is string langName)
+            if (combo?.SelectedItem is ComboBoxItem item && item.Tag is string fileName)
             {
-                SetStatus($"Language selection changed to: {langName}");
+                if (_application?.Languages != null && _application.Languages.Contains(fileName))
+                {
+                    _application.CurrentLanguage = _application.Languages[fileName];
+                    _application.SaveMainConfig();
+                    SetStatus($"Language changed to: {item.Content}");
+                }
             }
         }
 
