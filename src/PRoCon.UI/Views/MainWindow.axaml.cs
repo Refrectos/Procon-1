@@ -1637,7 +1637,7 @@ namespace PRoCon.UI.Views
 
             var dialog = new Avalonia.Controls.Window
             {
-                Title = "Set Nickname",
+                Title = Loc.T("dialog.nickname.title", "Set Nickname"),
                 Width = 320,
                 Height = 160,
                 WindowStartupLocation = Avalonia.Controls.WindowStartupLocation.CenterOwner,
@@ -1646,7 +1646,7 @@ namespace PRoCon.UI.Views
 
             string result = null;
             var panel = new StackPanel { Margin = new Avalonia.Thickness(20), Spacing = 12 };
-            panel.Children.Add(new TextBlock { Text = "Sidebar nickname (max 5 chars):", FontSize = 13 });
+            panel.Children.Add(new TextBlock { Text = Loc.T("dialog.nickname.prompt", "Sidebar nickname (max 5 chars):"), FontSize = 13 });
             var input = new TextBox
             {
                 Text = entry.Nickname ?? "",
@@ -1656,11 +1656,11 @@ namespace PRoCon.UI.Views
             };
             panel.Children.Add(input);
             var btnPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 8, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right };
-            var clearBtn = new Button { Content = "Clear", Padding = new Avalonia.Thickness(12, 6) };
+            var clearBtn = new Button { Content = Loc.T("dialog.nickname.clear", "Clear"), Padding = new Avalonia.Thickness(12, 6) };
             clearBtn.Click += (s, a) => { result = ""; dialog.Close(); };
-            var cancelBtn = new Button { Content = "Cancel", Padding = new Avalonia.Thickness(12, 6) };
+            var cancelBtn = new Button { Content = Loc.T("dialog.cancel", "Cancel"), Padding = new Avalonia.Thickness(12, 6) };
             cancelBtn.Click += (s, a) => dialog.Close();
-            var okBtn = new Button { Content = "OK", Padding = new Avalonia.Thickness(16, 6) };
+            var okBtn = new Button { Content = Loc.T("dialog.ok", "OK"), Padding = new Avalonia.Thickness(16, 6) };
             okBtn.Click += (s, a) => { result = input.Text; dialog.Close(); };
             btnPanel.Children.Add(clearBtn);
             btnPanel.Children.Add(cancelBtn);
@@ -1701,7 +1701,7 @@ namespace PRoCon.UI.Views
             if (clipboard != null)
                 await clipboard.SetTextAsync(json);
 
-            UpdateStatus("SuccessBrush", "Server info copied to clipboard");
+            UpdateStatus("SuccessBrush", Loc.T("status.copied", "Server info copied to clipboard"));
         }
 
         private async void OnImportServers(object sender, RoutedEventArgs e)
@@ -1709,7 +1709,7 @@ namespace PRoCon.UI.Views
             // Step 1: Paste JSON dialog
             var pasteDialog = new Avalonia.Controls.Window
             {
-                Title = "Import Servers",
+                Title = Loc.T("dialog.import.title", "Import Servers"),
                 Width = 500,
                 Height = 400,
                 WindowStartupLocation = Avalonia.Controls.WindowStartupLocation.CenterOwner,
@@ -1720,7 +1720,7 @@ namespace PRoCon.UI.Views
             var pastePanel = new StackPanel { Margin = new Avalonia.Thickness(16), Spacing = 10 };
             pastePanel.Children.Add(new TextBlock
             {
-                Text = "Paste server JSON (single object or array):",
+                Text = Loc.T("dialog.import.prompt", "Paste server JSON (single object or array):"),
                 FontSize = 13,
                 FontWeight = Avalonia.Media.FontWeight.SemiBold
             });
@@ -1734,9 +1734,9 @@ namespace PRoCon.UI.Views
             };
             pastePanel.Children.Add(jsonInput);
             var pasteBtnPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 8, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right };
-            var pasteCancelBtn = new Button { Content = "Cancel", Padding = new Avalonia.Thickness(16, 6) };
+            var pasteCancelBtn = new Button { Content = Loc.T("dialog.cancel", "Cancel"), Padding = new Avalonia.Thickness(16, 6) };
             pasteCancelBtn.Click += (s, a) => pasteDialog.Close();
-            var pasteOkBtn = new Button { Content = "Import", Padding = new Avalonia.Thickness(16, 6) };
+            var pasteOkBtn = new Button { Content = Loc.T("dialog.import.button", "Import"), Padding = new Avalonia.Thickness(16, 6) };
             pasteOkBtn.Click += (s, a) => { pastedJson = jsonInput.Text; pasteDialog.Close(); };
             pasteBtnPanel.Children.Add(pasteCancelBtn);
             pasteBtnPanel.Children.Add(pasteOkBtn);
@@ -1757,19 +1757,19 @@ namespace PRoCon.UI.Views
                     servers = new List<Newtonsoft.Json.Linq.JObject> { obj };
                 else
                 {
-                    UpdateStatus("ErrorBrush", "Invalid JSON format");
+                    UpdateStatus("ErrorBrush", Loc.T("dialog.import.invalidjson", "Invalid JSON format"));
                     return;
                 }
             }
             catch (Exception ex)
             {
-                UpdateStatus("ErrorBrush", $"JSON parse error: {ex.Message}");
+                UpdateStatus("ErrorBrush", Loc.TF("dialog.import.parseerror", "JSON parse error: {0}", ex.Message));
                 return;
             }
 
             if (servers.Count == 0)
             {
-                UpdateStatus("WarningBrush", "No servers found in JSON");
+                UpdateStatus("WarningBrush", Loc.T("dialog.import.noservers", "No servers imported"));
                 return;
             }
 
@@ -1794,7 +1794,7 @@ namespace PRoCon.UI.Views
                 // Credential prompt
                 var credDialog = new Avalonia.Controls.Window
                 {
-                    Title = $"Credentials: {name ?? hostPort}",
+                    Title = Loc.TF("dialog.import.credentials", "Credentials: {0}", name ?? hostPort),
                     Width = 380,
                     Height = isLayer ? 220 : 180,
                     WindowStartupLocation = Avalonia.Controls.WindowStartupLocation.CenterOwner,
@@ -1817,22 +1817,22 @@ namespace PRoCon.UI.Views
                 TextBox usernameInput = null;
                 if (isLayer)
                 {
-                    usernameInput = new TextBox { Watermark = "Username", FontSize = 13 };
+                    usernameInput = new TextBox { Watermark = Loc.T("dialog.import.username", "Username"), FontSize = 13 };
                     credPanel.Children.Add(usernameInput);
                 }
 
                 var passwordInput = new TextBox
                 {
                     PasswordChar = '\u2022',
-                    Watermark = isLayer ? "Password" : "RCON Password",
+                    Watermark = isLayer ? Loc.T("dialog.import.password.layer", "Password") : Loc.T("dialog.import.password", "RCON Password"),
                     FontSize = 13
                 };
                 credPanel.Children.Add(passwordInput);
 
                 var credBtnPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 8, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right };
-                var skipBtn = new Button { Content = "Skip", Padding = new Avalonia.Thickness(12, 6) };
+                var skipBtn = new Button { Content = Loc.T("dialog.import.skip", "Skip"), Padding = new Avalonia.Thickness(12, 6) };
                 skipBtn.Click += (s, a) => credDialog.Close();
-                var addBtn = new Button { Content = "Add Server", Padding = new Avalonia.Thickness(16, 6) };
+                var addBtn = new Button { Content = Loc.T("dialog.import.addserver", "Add Server"), Padding = new Avalonia.Thickness(16, 6) };
                 addBtn.Click += (s, a) =>
                 {
                     enteredPassword = passwordInput.Text ?? "";
@@ -1886,11 +1886,11 @@ namespace PRoCon.UI.Views
                 _application.SaveMainConfig();
                 SortAndGroupServers();
                 UpdateConnectionCount();
-                UpdateStatus("SuccessBrush", $"Imported {imported} server(s)");
+                UpdateStatus("SuccessBrush", Loc.TF("dialog.import.success", "Imported {0} server(s)", imported));
             }
             else
             {
-                UpdateStatus("WarningBrush", "No servers imported");
+                UpdateStatus("WarningBrush", Loc.T("dialog.import.noservers", "No servers imported"));
             }
         }
 
@@ -1970,7 +1970,7 @@ namespace PRoCon.UI.Views
             // Confirmation dialog
             var dialog = new Avalonia.Controls.Window
             {
-                Title = "Confirm Remove",
+                Title = Loc.T("dialog.remove.title", "Confirm Remove"),
                 Width = 350,
                 Height = 150,
                 WindowStartupLocation = Avalonia.Controls.WindowStartupLocation.CenterOwner,
@@ -1978,11 +1978,11 @@ namespace PRoCon.UI.Views
             };
             bool confirmed = false;
             var panel = new StackPanel { Margin = new Avalonia.Thickness(20), Spacing = 16 };
-            panel.Children.Add(new TextBlock { Text = $"Remove server {entry.DisplayLabel}?", TextWrapping = Avalonia.Media.TextWrapping.Wrap });
+            panel.Children.Add(new TextBlock { Text = Loc.TF("dialog.remove.message", "Remove server {0}?", entry.DisplayLabel), TextWrapping = Avalonia.Media.TextWrapping.Wrap });
             var btnPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 8, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right };
-            var cancelBtn = new Button { Content = "Cancel", Padding = new Avalonia.Thickness(16, 6) };
+            var cancelBtn = new Button { Content = Loc.T("dialog.cancel", "Cancel"), Padding = new Avalonia.Thickness(16, 6) };
             cancelBtn.Click += (s, a) => dialog.Close();
-            var removeBtn = new Button { Content = "Remove", Padding = new Avalonia.Thickness(16, 6) };
+            var removeBtn = new Button { Content = Loc.T("dialog.remove.button", "Remove"), Padding = new Avalonia.Thickness(16, 6) };
             removeBtn.Click += (s, a) => { confirmed = true; dialog.Close(); };
             btnPanel.Children.Add(cancelBtn);
             btnPanel.Children.Add(removeBtn);
@@ -2020,7 +2020,7 @@ namespace PRoCon.UI.Views
             if (_selectedServer == entry)
             {
                 _selectedServer = null;
-                UpdateStatus("TextSecondaryBrush", "Server removed");
+                UpdateStatus("TextSecondaryBrush", Loc.T("status.serverremoved", "Server removed"));
                 ShowConnectButton(false);
                 ShowDisconnectButton(false);
                 ShowRemoveButton(false);

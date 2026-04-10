@@ -7,6 +7,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using PRoCon.Core;
 using PRoCon.Core.Remote;
+using PRoCon.UI.Services;
 
 namespace PRoCon.UI.Views
 {
@@ -26,6 +27,43 @@ namespace PRoCon.UI.Views
         public LayerPanel()
         {
             InitializeComponent();
+            ApplyLocalization();
+        }
+
+        private void ApplyLocalization()
+        {
+            SetText("LayerTitleText", Loc.T("layer.title", "Layer Service"));
+            SetText("LayerDescriptionText", Loc.T("layer.description", "The layer allows remote admin connections to manage this server through PRoCon."));
+            SetText("LayerControlLabel", Loc.T("layer.control", "CONTROL"));
+            SetCheckContent("LayerEnabledCheck", Loc.T("layer.enable", "Enable Layer Service"));
+            SetText("LayerEnableDescText", Loc.T("layer.enable.desc", "When enabled, remote admin clients can connect via SignalR WebSocket to manage the game server."));
+            SetText("LayerConfigLabel", Loc.T("layer.config", "CONFIGURATION"));
+            SetText("LayerPortLabel", Loc.T("layer.config.port", "Port:"));
+            SetText("LayerBindLabel", Loc.T("layer.config.bind", "Bind Address:"));
+            SetButtonContent("LayerApplyButton", Loc.T("layer.config.apply", "Apply"));
+            SetText("LayerClientsLabel", Loc.T("layer.clients", "CONNECTED CLIENTS"));
+            SetButtonContent("LayerRefreshButton", Loc.T("layer.clients.refresh", "Refresh"));
+            SetText("LayerConnInfoLabel", Loc.T("layer.conninfo", "CONNECTION INFO"));
+            SetText("LayerConnectionInfo", Loc.T("layer.conninfo.notrunning", "Layer is not running."));
+            SetText("LayerStatusText", Loc.T("layer.status.offline", "Offline"));
+        }
+
+        private void SetText(string name, string value)
+        {
+            var ctrl = this.FindControl<TextBlock>(name);
+            if (ctrl != null) ctrl.Text = value;
+        }
+
+        private void SetButtonContent(string name, string value)
+        {
+            var ctrl = this.FindControl<Button>(name);
+            if (ctrl != null) ctrl.Content = value;
+        }
+
+        private void SetCheckContent(string name, string value)
+        {
+            var ctrl = this.FindControl<CheckBox>(name);
+            if (ctrl != null) ctrl.Content = value;
         }
 
         public void SetClient(PRoConClient client)
@@ -93,7 +131,7 @@ namespace PRoCon.UI.Views
             Dispatcher.UIThread.Post(() =>
             {
                 UpdateStatusIndicator(true);
-                SetStatus("Layer is now online.");
+                SetStatus(Loc.T("layer.started", "Layer is now online."));
             });
         }
 
@@ -102,7 +140,7 @@ namespace PRoCon.UI.Views
             Dispatcher.UIThread.Post(() =>
             {
                 UpdateStatusIndicator(false);
-                SetStatus("Layer has gone offline.");
+                SetStatus(Loc.T("layer.stopped", "Layer has gone offline."));
             });
         }
 
@@ -112,23 +150,23 @@ namespace PRoCon.UI.Views
             layerClient.Login += (client) => Dispatcher.UIThread.Post(() =>
             {
                 RefreshClientList();
-                SetStatus($"Client '{client.Username}' logged in.");
+                SetStatus(Loc.TF("layer.client.login", "Client '{0}' logged in.", client.Username));
             });
             layerClient.Logout += (client) => Dispatcher.UIThread.Post(() =>
             {
                 RefreshClientList();
-                SetStatus($"Client '{client.Username}' logged out.");
+                SetStatus(Loc.TF("layer.client.logout", "Client '{0}' logged out.", client.Username));
             });
             layerClient.Quit += (client) => Dispatcher.UIThread.Post(() =>
             {
                 RefreshClientList();
-                SetStatus("A client disconnected.");
+                SetStatus(Loc.T("layer.client.disconnected", "A client disconnected."));
             });
 
             Dispatcher.UIThread.Post(() =>
             {
                 RefreshClientList();
-                SetStatus($"New client connected from {layerClient.IPPort}");
+                SetStatus(Loc.TF("layer.client.connected", "New client connected from {0}", layerClient.IPPort));
             });
         }
 
@@ -146,12 +184,12 @@ namespace PRoCon.UI.Views
             if (enabled)
             {
                 _client.Layer.Start();
-                SetStatus("Starting layer...");
+                SetStatus(Loc.T("layer.starting", "Starting layer..."));
             }
             else
             {
                 _client.Layer.Shutdown();
-                SetStatus("Stopping layer...");
+                SetStatus(Loc.T("layer.stopping", "Stopping layer..."));
             }
         }
 
@@ -171,7 +209,7 @@ namespace PRoCon.UI.Views
                 _client.Layer.BindingAddress = bindingInput.Text ?? "";
             }
 
-            SetStatus("Layer configuration applied. Restart the layer to take effect.");
+            SetStatus(Loc.T("layer.config.applied", "Layer configuration applied. Restart the layer to take effect."));
         }
 
         private void OnRefreshClients(object sender, RoutedEventArgs e)
@@ -219,7 +257,7 @@ namespace PRoCon.UI.Views
             }
 
             if (items.Count == 0)
-                items.Add("(No clients connected)");
+                items.Add(Loc.T("layer.clients.none", "(No clients connected)"));
 
             clientsList.ItemsSource = items;
 
@@ -248,7 +286,7 @@ namespace PRoCon.UI.Views
             }
             else
             {
-                infoText.Text = "Layer is not running. Enable the layer to accept remote admin connections.";
+                infoText.Text = Loc.T("layer.conninfo.offline", "Layer is not running. Enable the layer to accept remote admin connections.");
             }
         }
 
@@ -260,7 +298,7 @@ namespace PRoCon.UI.Views
             if (indicator != null)
                 indicator.Fill = ResolveBrush(isOnline ? "ConnectedBrush" : "DisconnectedBrush");
             if (statusText != null)
-                statusText.Text = isOnline ? "Online" : "Offline";
+                statusText.Text = isOnline ? Loc.T("layer.status.online", "Online") : Loc.T("layer.status.offline", "Offline");
 
             UpdateConnectionInfo();
         }

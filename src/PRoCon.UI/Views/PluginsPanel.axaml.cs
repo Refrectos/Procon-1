@@ -10,6 +10,7 @@ using Avalonia.Threading;
 using PRoCon.Core;
 using PRoCon.Core.Plugin;
 using PRoCon.Core.Remote;
+using PRoCon.UI.Services;
 
 namespace PRoCon.UI.Views
 {
@@ -165,6 +166,7 @@ namespace PRoCon.UI.Views
         public PluginsPanel()
         {
             InitializeComponent();
+            ApplyLocalization();
 
             var pluginList = this.FindControl<ListBox>("PluginListBox");
             if (pluginList != null)
@@ -176,6 +178,36 @@ namespace PRoCon.UI.Views
 
             // Subscribe to pre-compilation output (fires before any server connects)
             PluginManager.PreCompileOutput += OnPluginOutput;
+        }
+
+        private void ApplyLocalization()
+        {
+            var warningText = this.FindControl<TextBlock>("PluginsWarningText");
+            if (warningText != null) warningText.Text = Loc.T("plugins.warning", "Plugins run with full trust on .NET 8. Only install plugins from trusted sources.");
+
+            var titleText = this.FindControl<TextBlock>("PluginsTitleText");
+            if (titleText != null) titleText.Text = Loc.T("plugins.title", "Plugins");
+
+            var reloadBtn = this.FindControl<Button>("ReloadPluginsButton");
+            if (reloadBtn != null) reloadBtn.Content = Loc.T("plugins.reload", "Reload Plugins");
+
+            var outputLabel = this.FindControl<TextBlock>("PluginOutputLabel");
+            if (outputLabel != null) outputLabel.Text = Loc.T("plugins.output", "Plugin Output");
+
+            var copyBtn = this.FindControl<Button>("BtnCopyOutput");
+            if (copyBtn != null) copyBtn.Content = Loc.T("plugins.output.copy", "Copy");
+
+            var clearBtn = this.FindControl<Button>("BtnClearOutput");
+            if (clearBtn != null) clearBtn.Content = Loc.T("plugins.output.clear", "Clear");
+
+            var toggleBtn = this.FindControl<Button>("BtnToggleOutput");
+            if (toggleBtn != null) toggleBtn.Content = Loc.T("plugins.output.hide", "Hide");
+
+            var descTab = this.FindControl<TabItem>("DescriptionTab");
+            if (descTab != null) descTab.Header = Loc.T("plugins.tab.description", "Description");
+
+            var settingsTab = this.FindControl<TabItem>("SettingsTab");
+            if (settingsTab != null) settingsTab.Header = Loc.T("plugins.tab.settings", "Settings");
         }
 
         public void SetClient(PRoConClient client)
@@ -492,7 +524,7 @@ namespace PRoCon.UI.Views
             var nameText = this.FindControl<TextBlock>("DetailNameText");
             var versionText = this.FindControl<TextBlock>("DetailVersionText");
             var authorText = this.FindControl<TextBlock>("DetailAuthorText");
-            if (nameText != null) nameText.Text = "Select a plugin";
+            if (nameText != null) nameText.Text = Loc.T("plugins.select", "Select a plugin");
             if (versionText != null) versionText.Text = "";
             if (authorText != null) authorText.Text = "";
             var descPanel = this.FindControl<StackPanel>("DescriptionPanel");
@@ -797,9 +829,9 @@ namespace PRoCon.UI.Views
                 var btn = this.FindControl<Button>("BtnCopyOutput");
                 if (btn != null)
                 {
-                    btn.Content = "Copied!";
+                    btn.Content = Loc.T("plugins.output.copied", "Copied!");
                     await System.Threading.Tasks.Task.Delay(1500);
-                    btn.Content = "Copy";
+                    btn.Content = Loc.T("plugins.output.copy", "Copy");
                 }
             }
         }
@@ -813,7 +845,7 @@ namespace PRoCon.UI.Views
             if (outputText != null)
                 outputText.IsVisible = _outputVisible;
             if (toggleBtn != null)
-                toggleBtn.Content = _outputVisible ? "Hide" : "Show";
+                toggleBtn.Content = _outputVisible ? Loc.T("plugins.output.hide", "Hide") : Loc.T("plugins.output.show", "Show");
         }
     }
 }

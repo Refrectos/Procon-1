@@ -7,6 +7,7 @@ using Avalonia.Threading;
 using PRoCon.Core;
 using PRoCon.Core.Accounts;
 using PRoCon.Core.Remote;
+using PRoCon.UI.Services;
 
 namespace PRoCon.UI.Views
 {
@@ -34,10 +35,43 @@ namespace PRoCon.UI.Views
         public AccountsPanel()
         {
             InitializeComponent();
+            ApplyLocalization();
 
             var accountList = this.FindControl<ListBox>("AccountListBox");
             if (accountList != null)
                 accountList.ItemsSource = _accounts;
+        }
+
+        private void ApplyLocalization()
+        {
+            SetText("AccountsTitleText", Loc.T("accounts.title", "Accounts"));
+            SetText("AddUpdateLabel", Loc.T("accounts.addupdate", "Add / Update"));
+            SetButtonContent("AddAccountButton", Loc.T("accounts.add", "Add"));
+            SetButtonContent("RemoveAccountButton", Loc.T("accounts.remove", "Remove"));
+            SetButtonContent("ChangePasswordButton", Loc.T("accounts.changepwd", "Change Pwd"));
+            SetText("PresetsLabel", Loc.T("accounts.presets", "QUICK PRESETS"));
+            SetButtonContent("PresetFullAdminButton", Loc.T("accounts.presets.fulladmin", "Full Admin"));
+            SetButtonContent("PresetModeratorButton", Loc.T("accounts.presets.moderator", "Moderator"));
+            SetButtonContent("PresetSpectatorButton", Loc.T("accounts.presets.spectator", "Spectator"));
+            SetButtonContent("PresetClearButton", Loc.T("accounts.presets.clear", "Clear All"));
+            SetText("PrivAccessLabel", Loc.T("accounts.priv.access", "ACCESS"));
+            SetText("PrivPlayersLabel", Loc.T("accounts.priv.players", "PLAYER MANAGEMENT"));
+            SetText("PrivListsLabel", Loc.T("accounts.priv.lists", "SERVER LISTS"));
+            SetText("PrivProconLabel", Loc.T("accounts.priv.procon", "PUNKBUSTER & PROCON"));
+            SetButtonContent("SavePrivilegesButton", Loc.T("accounts.save", "Save Privileges"));
+            SetText("PrivilegesHeaderText", Loc.T("accounts.header.default", "Select an account to edit privileges"));
+        }
+
+        private void SetText(string name, string value)
+        {
+            var ctrl = this.FindControl<TextBlock>(name);
+            if (ctrl != null) ctrl.Text = value;
+        }
+
+        private void SetButtonContent(string name, string value)
+        {
+            var ctrl = this.FindControl<Button>(name);
+            if (ctrl != null) ctrl.Content = value;
         }
 
         public void SetClient(PRoConClient client)
@@ -97,7 +131,12 @@ namespace PRoCon.UI.Views
             }
 
             var countText = this.FindControl<TextBlock>("AccountCountText");
-            if (countText != null) countText.Text = $"{_accounts.Count} account{(_accounts.Count != 1 ? "s" : "")}";
+            if (countText != null)
+            {
+                countText.Text = _accounts.Count == 1
+                    ? Loc.T("accounts.count.singular", "1 account")
+                    : Loc.TF("accounts.count", "{0} accounts", _accounts.Count);
+            }
         }
 
         private void OnAccountSelected(object sender, SelectionChangedEventArgs e)
@@ -110,7 +149,7 @@ namespace PRoCon.UI.Views
 
             var headerText = this.FindControl<TextBlock>("PrivilegesHeaderText");
             if (headerText != null)
-                headerText.Text = $"Privileges for: {entry.Name}";
+                headerText.Text = Loc.TF("accounts.header.selected", "Privileges for: {0}", entry.Name);
 
             // Show privilege groups and save button
             string[] panels = { "PresetsPanel", "PrivGroupAccess", "PrivGroupPlayers",
@@ -256,7 +295,7 @@ namespace PRoCon.UI.Views
             RefreshAccountList();
 
             var headerText = this.FindControl<TextBlock>("PrivilegesHeaderText");
-            if (headerText != null) headerText.Text = "Select an account to edit privileges";
+            if (headerText != null) headerText.Text = Loc.T("accounts.header.default", "Select an account to edit privileges");
 
             var saveBtn = this.FindControl<Button>("SavePrivilegesButton");
             if (saveBtn != null) saveBtn.IsVisible = false;
@@ -348,12 +387,12 @@ namespace PRoCon.UI.Views
                     Account account = _application.AccountsList[_selectedAccountName];
                     _client.ProconProtectedLayerSetPrivileges(account, newPrivs);
                     var status = this.FindControl<TextBlock>("SaveStatusText");
-                    if (status != null) status.Text = $"Privileges saved for {_selectedAccountName}";
+                    if (status != null) status.Text = Loc.TF("accounts.save.success", "Privileges saved for {0}", _selectedAccountName);
                 }
                 catch
                 {
                     var status = this.FindControl<TextBlock>("SaveStatusText");
-                    if (status != null) status.Text = "Failed to save privileges";
+                    if (status != null) status.Text = Loc.T("accounts.save.failed", "Failed to save privileges");
                 }
             }
         }

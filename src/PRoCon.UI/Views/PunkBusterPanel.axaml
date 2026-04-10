@@ -4,7 +4,7 @@
 
   <DockPanel>
     <!-- Header -->
-    <TextBlock DockPanel.Dock="Top" Text="PunkBuster" FontSize="16" FontWeight="SemiBold"
+    <TextBlock DockPanel.Dock="Top" Name="PunkBusterTitleText" Text="PunkBuster" FontSize="16" FontWeight="SemiBold"
                Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,12" />
 
     <!-- Command input at bottom -->
@@ -12,7 +12,7 @@
             Background="{DynamicResource SurfaceElevatedBrush}"
             CornerRadius="3" Padding="12" Margin="0,8,0,0">
       <DockPanel>
-        <TextBlock DockPanel.Dock="Top" Text="Send PunkBuster Command" FontSize="13" FontWeight="SemiBold"
+        <TextBlock DockPanel.Dock="Top" Name="PunkBusterCommandHeader" Text="Send PunkBuster Command" FontSize="13" FontWeight="SemiBold"
                    Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,8" />
         <Grid ColumnDefinitions="*,Auto">
           <TextBox Grid.Column="0" Name="CommandInput"

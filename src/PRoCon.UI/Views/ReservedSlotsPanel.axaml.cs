@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using PRoCon.Core.Remote;
+using PRoCon.UI.Services;
 
 namespace PRoCon.UI.Views
 {
@@ -15,6 +16,28 @@ namespace PRoCon.UI.Views
         public ReservedSlotsPanel()
         {
             InitializeComponent();
+            ApplyLocalization();
+        }
+
+        private void ApplyLocalization()
+        {
+            var title = this.FindControl<TextBlock>("ReservedTitleText");
+            if (title != null) title.Text = Loc.T("reserved.title", "Reserved Slots");
+
+            var refreshBtn = this.FindControl<Button>("BtnRefresh");
+            if (refreshBtn != null) refreshBtn.Content = Loc.T("reserved.refresh", "Refresh");
+
+            var removeBtn = this.FindControl<Button>("BtnRemovePlayer");
+            if (removeBtn != null) removeBtn.Content = Loc.T("reserved.remove", "Remove Selected");
+
+            var addHeader = this.FindControl<TextBlock>("ReservedAddHeader");
+            if (addHeader != null) addHeader.Text = Loc.T("reserved.add.header", "Add Player to Reserved Slots");
+
+            var addBtn = this.FindControl<Button>("BtnAddPlayer");
+            if (addBtn != null) addBtn.Content = Loc.T("reserved.add.button", "Add Player");
+
+            var nameInput = this.FindControl<TextBox>("PlayerNameInput");
+            if (nameInput != null) nameInput.Watermark = Loc.T("reserved.add.watermark", "Player name");
         }
 
         public void SetClient(PRoConClient client)

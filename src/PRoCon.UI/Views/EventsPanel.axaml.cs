@@ -7,6 +7,7 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using PRoCon.Core.Events;
 using PRoCon.Core.Remote;
+using PRoCon.UI.Services;
 
 namespace PRoCon.UI.Views
 {
@@ -31,10 +32,38 @@ namespace PRoCon.UI.Views
         public EventsPanel()
         {
             InitializeComponent();
+            ApplyLocalization();
 
             var itemsControl = this.FindControl<ItemsControl>("EventItemsControl");
             if (itemsControl != null)
                 itemsControl.ItemsSource = _filteredEvents;
+        }
+
+        private void ApplyLocalization()
+        {
+            var title = this.FindControl<TextBlock>("EventLogTitle");
+            if (title != null) title.Text = Loc.T("events.title", "Event Log");
+
+            var clearBtn = this.FindControl<Button>("ClearEventsButton");
+            if (clearBtn != null) clearBtn.Content = Loc.T("events.clear", "Clear");
+
+            var filterConnection = this.FindControl<CheckBox>("FilterConnection");
+            if (filterConnection != null) filterConnection.Content = Loc.T("events.filter.connection", "Connection");
+
+            var filterPlayers = this.FindControl<CheckBox>("FilterPlayerlist");
+            if (filterPlayers != null) filterPlayers.Content = Loc.T("events.filter.players", "Players");
+
+            var filterBans = this.FindControl<CheckBox>("FilterBanlist");
+            if (filterBans != null) filterBans.Content = Loc.T("events.filter.bans", "Bans");
+
+            var filterMap = this.FindControl<CheckBox>("FilterMap");
+            if (filterMap != null) filterMap.Content = Loc.T("events.filter.map", "Map");
+
+            var filterPlugins = this.FindControl<CheckBox>("FilterPlugins");
+            if (filterPlugins != null) filterPlugins.Content = Loc.T("events.filter.plugins", "Plugins");
+
+            var filterLayer = this.FindControl<CheckBox>("FilterLayer");
+            if (filterLayer != null) filterLayer.Content = Loc.T("events.filter.layer", "Layer");
         }
 
         public void SetClient(PRoConClient client)

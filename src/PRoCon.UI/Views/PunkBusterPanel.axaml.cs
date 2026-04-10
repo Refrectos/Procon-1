@@ -5,6 +5,7 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using PRoCon.Core;
 using PRoCon.Core.Remote;
+using PRoCon.UI.Services;
 
 namespace PRoCon.UI.Views
 {
@@ -17,6 +18,22 @@ namespace PRoCon.UI.Views
         public PunkBusterPanel()
         {
             InitializeComponent();
+            ApplyLocalization();
+        }
+
+        private void ApplyLocalization()
+        {
+            var title = this.FindControl<TextBlock>("PunkBusterTitleText");
+            if (title != null) title.Text = Loc.T("punkbuster.title", "PunkBuster");
+
+            var cmdHeader = this.FindControl<TextBlock>("PunkBusterCommandHeader");
+            if (cmdHeader != null) cmdHeader.Text = Loc.T("punkbuster.command.header", "Send PunkBuster Command");
+
+            var cmdInput = this.FindControl<TextBox>("CommandInput");
+            if (cmdInput != null) cmdInput.Watermark = Loc.T("punkbuster.command.watermark", "pb_sv_command (e.g. pb_sv_plist)");
+
+            var sendBtn = this.FindControl<Button>("BtnSend");
+            if (sendBtn != null) sendBtn.Content = Loc.T("punkbuster.command.send", "Send");
         }
 
         public void SetClient(PRoConClient client)

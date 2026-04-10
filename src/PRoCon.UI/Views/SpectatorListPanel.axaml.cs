@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using PRoCon.Core.Remote;
+using PRoCon.UI.Services;
 
 namespace PRoCon.UI.Views
 {
@@ -15,6 +16,28 @@ namespace PRoCon.UI.Views
         public SpectatorListPanel()
         {
             InitializeComponent();
+            ApplyLocalization();
+        }
+
+        private void ApplyLocalization()
+        {
+            var title = this.FindControl<TextBlock>("SpectatorTitleText");
+            if (title != null) title.Text = Loc.T("spectators.title", "Spectator List");
+
+            var refreshBtn = this.FindControl<Button>("BtnRefresh");
+            if (refreshBtn != null) refreshBtn.Content = Loc.T("spectators.refresh", "Refresh");
+
+            var removeBtn = this.FindControl<Button>("BtnRemovePlayer");
+            if (removeBtn != null) removeBtn.Content = Loc.T("spectators.remove", "Remove Selected");
+
+            var addHeader = this.FindControl<TextBlock>("SpectatorAddHeader");
+            if (addHeader != null) addHeader.Text = Loc.T("spectators.add.header", "Add Player to Spectator List");
+
+            var addBtn = this.FindControl<Button>("BtnAddPlayer");
+            if (addBtn != null) addBtn.Content = Loc.T("spectators.add.button", "Add Player");
+
+            var nameInput = this.FindControl<TextBox>("PlayerNameInput");
+            if (nameInput != null) nameInput.Watermark = Loc.T("spectators.add.watermark", "Player name");
         }
 
         public void SetClient(PRoConClient client)

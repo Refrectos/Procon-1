@@ -8,7 +8,7 @@
     <Border DockPanel.Dock="Top" Background="{DynamicResource ButtonWarningGradient}"
             BorderBrush="{DynamicResource ButtonWarningBorderBrush}" BorderThickness="1"
             CornerRadius="3" Padding="12" Margin="0,0,0,8">
-      <TextBlock Text="Plugins run with full trust on .NET 8. Only install plugins from trusted sources."
+      <TextBlock Name="PluginsWarningText" Text="Plugins run with full trust on .NET 8. Only install plugins from trusted sources."
                  Foreground="{DynamicResource WarningBrush}" FontSize="12" TextWrapping="Wrap" />
     </Border>
 
@@ -22,10 +22,10 @@
             BorderBrush="{DynamicResource BorderBrush}"
             BorderThickness="0,0,1,0">
       <DockPanel>
-        <TextBlock DockPanel.Dock="Top" Text="Plugins" FontSize="16" FontWeight="SemiBold"
+        <TextBlock DockPanel.Dock="Top" Name="PluginsTitleText" Text="Plugins" FontSize="16" FontWeight="SemiBold"
                    Foreground="{DynamicResource TextPrimaryBrush}" Margin="12,12,12,8" />
 
-        <Button DockPanel.Dock="Bottom" Content="Reload Plugins" Margin="12,8"
+        <Button DockPanel.Dock="Bottom" Name="ReloadPluginsButton" Content="Reload Plugins" Margin="12,8"
                 Background="{DynamicResource ButtonSecondaryBrush}"
                 Foreground="{DynamicResource ButtonSecondaryTextBrush}"
                 HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
@@ -91,14 +91,14 @@
                   Background="{DynamicResource SurfaceBrush}">
 
         <!-- Description Tab -->
-        <TabItem Header="Description" FontSize="13">
+        <TabItem Name="DescriptionTab" Header="Description" FontSize="13">
           <ScrollViewer Padding="16">
             <StackPanel Name="DescriptionPanel" Spacing="4" />
           </ScrollViewer>
         </TabItem>
 
         <!-- Settings Tab -->
-        <TabItem Header="Settings" FontSize="13">
+        <TabItem Name="SettingsTab" Header="Settings" FontSize="13">
           <ListBox Name="VariablesItemsControl"
                    Background="Transparent" Margin="8"
                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
@@ -171,7 +171,7 @@
         <Border DockPanel.Dock="Top" Padding="8,6"
                 Background="{DynamicResource SurfaceElevatedBrush}">
           <DockPanel>
-            <TextBlock Text="Plugin Output" FontSize="12" FontWeight="SemiBold"
+            <TextBlock Name="PluginOutputLabel" Text="Plugin Output" FontSize="12" FontWeight="SemiBold"
                        Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6">
               <Button Name="BtnCopyOutput" Content="Copy" Padding="8,3" FontSize="11"

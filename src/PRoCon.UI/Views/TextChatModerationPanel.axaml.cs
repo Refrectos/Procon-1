@@ -6,6 +6,7 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using PRoCon.Core.Remote;
 using PRoCon.Core.TextChatModeration;
+using PRoCon.UI.Services;
 
 namespace PRoCon.UI.Views
 {
@@ -21,10 +22,41 @@ namespace PRoCon.UI.Views
         public TextChatModerationPanel()
         {
             InitializeComponent();
+            ApplyLocalization();
 
             _moderationList = this.FindControl<ListBox>("ModerationList");
             _playerNameInput = this.FindControl<TextBox>("PlayerNameInput");
             _moderationLevelCombo = this.FindControl<ComboBox>("ModerationLevelCombo");
+        }
+
+        private void ApplyLocalization()
+        {
+            var title = this.FindControl<TextBlock>("ChatModTitleText");
+            if (title != null) title.Text = Loc.T("chatmod.title", "Text Chat Moderation");
+
+            var refreshBtn = this.FindControl<Button>("BtnRefresh");
+            if (refreshBtn != null) refreshBtn.Content = Loc.T("chatmod.refresh", "Refresh");
+
+            var removeBtn = this.FindControl<Button>("BtnRemovePlayer");
+            if (removeBtn != null) removeBtn.Content = Loc.T("chatmod.remove", "Remove Selected");
+
+            var clearAllBtn = this.FindControl<Button>("BtnClearAll");
+            if (clearAllBtn != null) clearAllBtn.Content = Loc.T("chatmod.clearall", "Clear All");
+
+            var addHeader = this.FindControl<TextBlock>("ChatModAddHeader");
+            if (addHeader != null) addHeader.Text = Loc.T("chatmod.add.header", "Add Player to Moderation List");
+
+            var nameInput = this.FindControl<TextBox>("PlayerNameInput");
+            if (nameInput != null) nameInput.Watermark = Loc.T("chatmod.add.watermark", "Player name");
+
+            var addBtn = this.FindControl<Button>("BtnAddPlayer");
+            if (addBtn != null) addBtn.Content = Loc.T("chatmod.add.button", "Add Player");
+
+            var colPlayer = this.FindControl<TextBlock>("ChatModColPlayer");
+            if (colPlayer != null) colPlayer.Text = Loc.T("chatmod.col.player", "Player Name");
+
+            var colLevel = this.FindControl<TextBlock>("ChatModColLevel");
+            if (colLevel != null) colLevel.Text = Loc.T("chatmod.col.level", "Moderation Level");
         }
 
         public void SetClient(PRoConClient client)
