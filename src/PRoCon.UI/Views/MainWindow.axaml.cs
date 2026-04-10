@@ -464,6 +464,7 @@ namespace PRoCon.UI.Views
                 };
 
                 CacheControls();
+                ApplyLocalization();
 
                 // Start adaptive polling: 1-second master tick checks per-server schedules (5s–30s)
                 _playerListTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
@@ -2491,6 +2492,44 @@ namespace PRoCon.UI.Views
 
         private void OnDashboardClick(object sender, RoutedEventArgs e) => OnGoHome(sender, e);
 
+        /// <summary>
+        /// Apply localized strings to all UI elements that have hardcoded text.
+        /// Called after CacheControls and whenever the language changes.
+        /// </summary>
+        private void ApplyLocalization()
+        {
+            // Nav buttons — map Tag to loc key
+            var navKeys = new Dictionary<string, string>
+            {
+                { "6", "nav.info" }, { "1", "nav.chat" }, { "2", "nav.players" },
+                { "3", "nav.maps" }, { "4", "nav.bans" }, { "5", "nav.reserved" },
+                { "14", "nav.spectators" }, { "15", "nav.punkbuster" }, { "16", "nav.chatmod" },
+                { "7", "nav.settings" }, { "8", "nav.plugins" }, { "9", "nav.accounts" },
+                { "10", "nav.events" }, { "11", "nav.console" }, { "12", "nav.layer" },
+            };
+
+            if (_tabBar != null)
+            {
+                foreach (var child in _tabBar.Children)
+                {
+                    if (child is Button btn && btn.Tag is string tag && navKeys.TryGetValue(tag, out var locKey))
+                    {
+                        btn.Content = Services.Loc.T(locKey);
+                    }
+                }
+            }
+
+            // Sidebar action buttons
+            if (_connectSelectedButton != null)
+                _connectSelectedButton.Content = Services.Loc.T("action.connect", "CONNECT");
+            if (_disconnectButton != null)
+                _disconnectButton.Content = Services.Loc.T("action.disconnect", "DISCONNECT");
+            if (_editServerButton != null)
+                _editServerButton.Content = Services.Loc.T("action.edit", "EDIT");
+            if (_removeServerButton != null)
+                _removeServerButton.Content = Services.Loc.T("action.remove", "REMOVE");
+        }
+
         /// <summary>Static brush resolver for use in static methods.</summary>
         private static IBrush ResolveThemeBrush(string resourceKey)
         {
@@ -2851,7 +2890,9 @@ namespace PRoCon.UI.Views
                 {
                     var client = GetClient(_selectedServer.HostPort);
                     bool autoOn = client?.AutomaticallyConnect ?? false;
-                    _autoConnectButton.Content = autoOn ? "AUTO-CONNECT: ON" : "AUTO-CONNECT: OFF";
+                    _autoConnectButton.Content = autoOn
+                        ? Services.Loc.T("action.autoconnect.on", "AUTO-CONNECT: ON")
+                        : Services.Loc.T("action.autoconnect.off", "AUTO-CONNECT: OFF");
                 }
             }
         }

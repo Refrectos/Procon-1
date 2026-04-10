@@ -133,6 +133,34 @@ namespace PRoCon.UI.Views
         public MapListPanel()
         {
             InitializeComponent();
+            ApplyLocalization();
+        }
+
+        private void ApplyLocalization()
+        {
+            var h = this.FindControl<Avalonia.Controls.TextBlock>("HeaderText");
+            if (h != null) h.Text = Services.Loc.T("maplist.title", "Map List");
+            var a = this.FindControl<Avalonia.Controls.TextBlock>("AvailableMapsLabel");
+            if (a != null) a.Text = Services.Loc.T("maplist.available", "Available Maps");
+            var r = this.FindControl<Avalonia.Controls.TextBlock>("RotationLabel");
+            if (r != null) r.Text = Services.Loc.T("maplist.rotation", "Current Rotation");
+
+            var btn = this.FindControl<Avalonia.Controls.Button>("BtnAddToRotation");
+            if (btn != null) btn.Content = Services.Loc.T("maplist.addtorotation", "Add to Rotation") + " \u2192";
+            var rem = this.FindControl<Avalonia.Controls.Button>("BtnRemove");
+            if (rem != null) rem.Content = Services.Loc.T("maplist.remove", "Remove");
+            var up = this.FindControl<Avalonia.Controls.Button>("BtnMoveUp");
+            if (up != null) up.Content = Services.Loc.T("maplist.moveup", "Move Up");
+            var dn = this.FindControl<Avalonia.Controls.Button>("BtnMoveDown");
+            if (dn != null) dn.Content = Services.Loc.T("maplist.movedown", "Move Down");
+            var nxt = this.FindControl<Avalonia.Controls.Button>("BtnSetNextMap");
+            if (nxt != null) nxt.Content = Services.Loc.T("maplist.setnext", "Set as Next");
+            var rr = this.FindControl<Avalonia.Controls.Button>("BtnRestartRound");
+            if (rr != null) rr.Content = Services.Loc.T("maplist.restartround", "Restart Round");
+            var nr = this.FindControl<Avalonia.Controls.Button>("BtnRunNextRound");
+            if (nr != null) nr.Content = Services.Loc.T("maplist.runnextround", "Run Next Round");
+            var er = this.FindControl<Avalonia.Controls.Button>("BtnEndRound");
+            if (er != null) er.Content = Services.Loc.T("maplist.endround", "End Round");
         }
 
         public void SetClient(PRoConClient client)
