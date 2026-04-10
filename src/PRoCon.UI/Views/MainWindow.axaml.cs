@@ -421,6 +421,8 @@ namespace PRoCon.UI.Views
                         entry.GameType = client.Game.GameType;
                     else if (!string.IsNullOrEmpty(client.CachedGameType))
                         entry.GameType = client.CachedGameType;
+                    if (!string.IsNullOrEmpty(client.Nickname))
+                        entry.Nickname = client.Nickname;
                     if (client.CurrentServerInfo != null)
                     {
                         entry.PlayerCount = client.CurrentServerInfo.PlayerCount;
@@ -1614,6 +1616,57 @@ namespace PRoCon.UI.Views
                     client.AutomaticallyConnect = false;
                     client.Shutdown();
                 }
+            }
+        }
+
+        private async void OnContextSetNickname(object sender, RoutedEventArgs e)
+        {
+            if (sender is not MenuItem mi || mi.DataContext is not ServerEntry entry) return;
+
+            var dialog = new Avalonia.Controls.Window
+            {
+                Title = "Set Nickname",
+                Width = 320,
+                Height = 160,
+                WindowStartupLocation = Avalonia.Controls.WindowStartupLocation.CenterOwner,
+                CanResize = false
+            };
+
+            string result = null;
+            var panel = new StackPanel { Margin = new Avalonia.Thickness(20), Spacing = 12 };
+            panel.Children.Add(new TextBlock { Text = "Sidebar nickname (max 5 chars):", FontSize = 13 });
+            var input = new TextBox
+            {
+                Text = entry.Nickname ?? "",
+                MaxLength = 5,
+                Watermark = "e.g. EZ#1",
+                FontSize = 14
+            };
+            panel.Children.Add(input);
+            var btnPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 8, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right };
+            var clearBtn = new Button { Content = "Clear", Padding = new Avalonia.Thickness(12, 6) };
+            clearBtn.Click += (s, a) => { result = ""; dialog.Close(); };
+            var cancelBtn = new Button { Content = "Cancel", Padding = new Avalonia.Thickness(12, 6) };
+            cancelBtn.Click += (s, a) => dialog.Close();
+            var okBtn = new Button { Content = "OK", Padding = new Avalonia.Thickness(16, 6) };
+            okBtn.Click += (s, a) => { result = input.Text; dialog.Close(); };
+            btnPanel.Children.Add(clearBtn);
+            btnPanel.Children.Add(cancelBtn);
+            btnPanel.Children.Add(okBtn);
+            panel.Children.Add(btnPanel);
+            dialog.Content = panel;
+
+            await dialog.ShowDialog(this);
+            if (result == null) return; // cancelled
+
+            entry.Nickname = string.IsNullOrWhiteSpace(result) ? null : result.Trim();
+
+            // Persist to client and config
+            var client = GetClient(entry.HostPort);
+            if (client != null)
+            {
+                client.Nickname = entry.Nickname ?? "";
+                _application.SaveMainConfig();
             }
         }
 

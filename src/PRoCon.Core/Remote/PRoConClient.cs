@@ -365,6 +365,11 @@ namespace PRoCon.Core.Remote
         /// </summary>
         public string CachedGameType { get; set; } = String.Empty;
 
+        /// <summary>
+        /// User-defined short label for the sidebar icon.
+        /// </summary>
+        public string Nickname { get; set; } = String.Empty;
+
         public string Username
         {
             get { return _username; }

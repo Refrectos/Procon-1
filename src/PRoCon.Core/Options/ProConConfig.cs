@@ -177,6 +177,9 @@ namespace PRoCon.Core.Options
 
         [JsonProperty("gameType")]
         public string GameType { get; set; } = "";
+
+        [JsonProperty("nickname")]
+        public string Nickname { get; set; } = "";
     }
 
     public class AccountConfig

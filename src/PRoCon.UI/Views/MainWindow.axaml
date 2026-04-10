@@ -351,6 +351,7 @@
                             <MenuItem Header="Connect" Click="OnContextConnect" />
                             <MenuItem Header="Disconnect" Click="OnContextDisconnect" />
                             <Separator />
+                            <MenuItem Header="Set Nickname" Click="OnContextSetNickname" />
                             <MenuItem Header="Edit Server" Click="OnContextEdit" />
                             <MenuItem Header="Remove Server" Click="OnContextRemoveServer" />
                           </ContextMenu>

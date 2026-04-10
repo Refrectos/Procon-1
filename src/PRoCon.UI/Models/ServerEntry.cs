@@ -32,6 +32,17 @@ namespace PRoCon.UI.Models
         public bool IsLayerConnection { get; set; }
         public string LayerUsername { get; set; }
 
+        private string _nickname;
+        /// <summary>
+        /// User-defined short label for the sidebar icon (max ~4 chars).
+        /// When set, overrides the auto-generated Initials.
+        /// </summary>
+        public string Nickname
+        {
+            get => _nickname;
+            set { _nickname = value; Notify(nameof(Nickname)); Notify(nameof(Initials)); }
+        }
+
         private string _serverName;
         public string ServerName
         {
@@ -190,11 +201,14 @@ namespace PRoCon.UI.Models
         // Marquee for long names (> ~25 chars at 12px font in available sidebar width)
         public bool IsNameOverflow => (DisplayName?.Length ?? 0) > 25;
 
-        // Sidebar icon initials (2-3 chars)
+        // Sidebar icon label — user nickname if set, otherwise auto-generated initials
         public string Initials
         {
             get
             {
+                if (!string.IsNullOrEmpty(Nickname))
+                    return Nickname.Length <= 5 ? Nickname : Nickname.Substring(0, 5);
+
                 string name = !string.IsNullOrEmpty(ServerName) ? ServerName : HostPort;
                 if (string.IsNullOrEmpty(name))
                     return "?";
