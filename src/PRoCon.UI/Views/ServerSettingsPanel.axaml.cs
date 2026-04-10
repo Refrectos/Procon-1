@@ -4,6 +4,7 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using PRoCon.Core;
 using PRoCon.Core.Remote;
+using PRoCon.UI.Services;
 
 namespace PRoCon.UI.Views
 {
@@ -15,6 +16,123 @@ namespace PRoCon.UI.Views
         public ServerSettingsPanel()
         {
             InitializeComponent();
+            ApplyLocalization();
+        }
+
+        private void ApplyLocalization()
+        {
+            // Server type banner
+            SetText2("ServerTypeCaption", Loc.T("serversettings.servertype", "Server Type:"));
+            SetText2("PresetCaption", "  |  " + Loc.T("serversettings.preset", "Preset:"));
+
+            // Section headers
+            SetText2("GeneralHeader", Loc.T("serversettings.general", "General"));
+            SetText2("GameplayHeader", Loc.T("serversettings.gameplay", "Gameplay"));
+            SetText2("DamageHealthHeader", Loc.T("serversettings.damagehealth", "Damage and Health"));
+            SetText2("TicketsRoundsHeader", Loc.T("serversettings.ticketsrounds", "Tickets and Rounds"));
+            SetText2("TeamKillHeader", Loc.T("serversettings.teamkill", "Team Kill"));
+            SetText2("IdleHeader", Loc.T("serversettings.idle", "Idle"));
+            SetText2("MiscHeader", Loc.T("serversettings.misc", "Misc"));
+
+            // General labels
+            SetText2("ServerNameLabel", Loc.T("serversettings.servername", "Server Name"));
+            SetText2("ServerDescriptionLabel", Loc.T("serversettings.description", "Description"));
+            SetText2("ServerMessageLabel", Loc.T("serversettings.servermessage", "Server Message"));
+            SetText2("GamePasswordLabel", Loc.T("serversettings.gamepassword", "Game Password"));
+            SetText2("MaxPlayersLabel", Loc.T("serversettings.maxplayers", "Max Players"));
+            SetText2("MaxSpectatorsLabel", Loc.T("serversettings.maxspectators", "Max Spectators"));
+            SetButtonContent("ApplyGeneralButton", Loc.T("serversettings.applygeneralsettings", "Apply General Settings"));
+
+            // Gameplay checkboxes
+            SetCheckBoxContent("FriendlyFireCheck", Loc.T("serversettings.friendlyfire", "Friendly Fire"));
+            SetText2("FriendlyFireHint", Loc.T("serversettings.hint.afterroundrestart", "(takes effect after round restart)"));
+            SetCheckBoxContent("AutoBalanceCheck", Loc.T("serversettings.autobalance", "Auto Balance"));
+            SetCheckBoxContent("KillCamCheck", Loc.T("serversettings.killcam", "Kill Cam"));
+            SetText2("KillCamHint", Loc.T("serversettings.hint.aftermapswitch", "(after map switch)"));
+            SetCheckBoxContent("MiniMapCheck", Loc.T("serversettings.minimap", "Minimap"));
+            SetText2("MiniMapHint", Loc.T("serversettings.hint.aftermapswitch", "(after map switch)"));
+            SetCheckBoxContent("HudCheck", Loc.T("serversettings.hud", "HUD"));
+            SetText2("HudHint", Loc.T("serversettings.hint.afterroundrestart2", "(after round restart)"));
+            SetCheckBoxContent("ThreeDSpottingCheck", Loc.T("serversettings.threedspotting", "3D Spotting"));
+            SetText2("ThreeDSpottingHint", Loc.T("serversettings.hint.aftermapswitch", "(after map switch)"));
+            SetCheckBoxContent("MiniMapSpottingCheck", Loc.T("serversettings.minimapspotting", "Minimap Spotting"));
+            SetText2("MiniMapSpottingHint", Loc.T("serversettings.hint.aftermapswitch", "(after map switch)"));
+            SetCheckBoxContent("ThirdPersonCamCheck", Loc.T("serversettings.thirdpersoncam", "3rd Person Cam"));
+            SetCheckBoxContent("NameTagCheck", Loc.T("serversettings.nametag", "Name Tag"));
+            SetText2("NameTagHint", Loc.T("serversettings.hint.aftermapswitch", "(after map switch)"));
+            SetCheckBoxContent("HitIndicatorsCheck", Loc.T("serversettings.hitindicators", "Hit Indicators"));
+            SetText2("HitIndicatorsHint", Loc.T("serversettings.hint.aftermapswitch", "(after map switch)"));
+            SetCheckBoxContent("RegenerateHealthCheck", Loc.T("serversettings.regeneratehealth", "Regenerate Health"));
+            SetText2("RegenerateHealthHint", Loc.T("serversettings.hint.instantaneous", "(instantaneous)"));
+            SetCheckBoxContent("OnlySquadLeaderSpawnCheck", Loc.T("serversettings.onlysquadleaderspawn", "Only Squad Leader Spawn"));
+            SetText2("OnlySquadLeaderSpawnHint", Loc.T("serversettings.hint.instantaneous", "(instantaneous)"));
+            SetCheckBoxContent("VehicleSpawnAllowedCheck", Loc.T("serversettings.vehiclespawnallowed", "Vehicle Spawn Allowed"));
+            SetCheckBoxContent("CommanderCheck", Loc.T("serversettings.commander", "Commander"));
+            SetText2("CommanderHint", Loc.T("serversettings.hint.aftermapswitch", "(after map switch)"));
+            SetCheckBoxContent("ForceReloadWholeMagsCheck", Loc.T("serversettings.forcereloadwholemags", "Force Reload Whole Mags"));
+            SetText2("ForceReloadWholeMagsHint", Loc.T("serversettings.hint.aftermapswitch", "(after map switch)"));
+            SetCheckBoxContent("AlwaysAllowSpectatorsCheck", Loc.T("serversettings.alwaysallowspectators", "Always Allow Spectators"));
+            SetText2("AlwaysAllowSpectatorsHint", Loc.T("serversettings.hint.startuponlyreadonly", "(startup only, read-only)"));
+            SetCheckBoxContent("IsNoobOnlyJoinCheck", Loc.T("serversettings.noobbonlyjoin", "Noob Only Join"));
+
+            // Damage & Health labels
+            SetText2("BulletDamageLabel", Loc.T("serversettings.bulletdamage", "Bullet Damage (%)"));
+            SetText2("BulletDamageInstantHint", Loc.T("serversettings.hint.instantaneous", "(instantaneous)"));
+            SetText2("SoldierHealthLabel", Loc.T("serversettings.soldierhealth", "Soldier Health (%)"));
+            SetText2("PlayerRespawnTimeLabel", Loc.T("serversettings.playerrespawntime", "Player Respawn Time (%)"));
+            SetText2("PlayerRespawnTimeInstantHint", Loc.T("serversettings.hint.instantaneous", "(instantaneous)"));
+            SetText2("VehicleSpawnDelayLabel", Loc.T("serversettings.vehiclespawndelay", "Vehicle Spawn Delay (%)"));
+            SetButtonContent("ApplyDamageHealthButton", Loc.T("serversettings.applydamagehealthsettings", "Apply Damage / Health Settings"));
+
+            // Tickets & Rounds labels
+            SetText2("GameModeCounterLabel", Loc.T("serversettings.gamemodecounter", "Game Mode Counter (%)"));
+            SetText2("GameModeCounterInstantHint", Loc.T("serversettings.hint.instantaneous", "(instantaneous)"));
+            SetText2("TicketBleedRateLabel", Loc.T("serversettings.ticketbleedrate", "Ticket Bleed Rate (%)"));
+            SetText2("RoundTimeLimitLabel", Loc.T("serversettings.roundtimelimit", "Round Time Limit (%)"));
+            SetText2("RoundStartPlayerCountLabel", Loc.T("serversettings.roundstartplayercount", "Round Start Player Count"));
+            SetText2("RoundRestartPlayerCountLabel", Loc.T("serversettings.roundrestartplayercount", "Round Restart Player Count"));
+            SetText2("RoundLockdownCountdownLabel", Loc.T("serversettings.roundlockdowncountdown", "Round Lockdown Countdown (sec)"));
+            SetText2("RoundWarmupTimeoutLabel", Loc.T("serversettings.roundwarmuptimeout", "Round Warmup Timeout (sec)"));
+            SetText2("RoundPlayersReadyBypassTimerLabel", Loc.T("serversettings.readybypasstimer", "Ready Bypass Timer (sec)"));
+            SetText2("RoundPlayersReadyMinCountLabel", Loc.T("serversettings.readyplayersmincount", "Ready Players Min Count"));
+            SetText2("RoundPlayersReadyPercentLabel", Loc.T("serversettings.readyplayerspercent", "Ready Players Percent (%)"));
+            SetButtonContent("ApplyTicketsRoundsButton", Loc.T("serversettings.applyticketssettings", "Apply Tickets / Rounds Settings"));
+
+            // Team Kill labels
+            SetText2("TKCountForKickLabel", Loc.T("serversettings.tkcountforkick", "TK Count for Kick"));
+            SetText2("TKKickForBanLabel", Loc.T("serversettings.tkkickforban", "TK Kick for Ban"));
+            SetText2("TKValueIncreaseLabel", Loc.T("serversettings.tkvalueincrease", "TK Value Increase"));
+            SetText2("TKValueDecreaseLabel", Loc.T("serversettings.tkvaluedecrease", "TK Value Decrease / sec"));
+            SetText2("TKValueForKickLabel", Loc.T("serversettings.tkvalueforkick", "TK Value for Kick"));
+            SetButtonContent("ApplyTKButton", Loc.T("serversettings.applyteamkillsettings", "Apply Team Kill Settings"));
+
+            // Idle labels
+            SetText2("IdleTimeoutLabel", Loc.T("serversettings.idletimeout", "Idle Timeout (sec)"));
+            SetText2("IdleBanRoundsLabel", Loc.T("serversettings.idlebanrounds", "Idle Ban Rounds"));
+            SetButtonContent("ApplyIdleButton", Loc.T("serversettings.applyidlesettings", "Apply Idle Settings"));
+
+            // Misc labels
+            SetText2("UnlockModeLabel", Loc.T("serversettings.unlockmode", "Unlock Mode"));
+            SetText2("GunMasterWeaponsPresetLabel", Loc.T("serversettings.gunmasterweaponspreset", "Gun Master Weapons Preset (0-4)"));
+            SetButtonContent("ApplyMiscButton", Loc.T("serversettings.applymiscsettings", "Apply Misc Settings"));
+        }
+
+        private void SetText2(string controlName, string value)
+        {
+            var tb = this.FindControl<TextBlock>(controlName);
+            if (tb != null) tb.Text = value;
+        }
+
+        private void SetButtonContent(string controlName, string value)
+        {
+            var btn = this.FindControl<Button>(controlName);
+            if (btn != null) btn.Content = value;
+        }
+
+        private void SetCheckBoxContent(string controlName, string value)
+        {
+            var cb = this.FindControl<CheckBox>(controlName);
+            if (cb != null) cb.Content = value;
         }
 
         public void SetClient(PRoConClient client)
