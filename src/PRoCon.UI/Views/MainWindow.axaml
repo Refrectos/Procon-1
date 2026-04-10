@@ -292,6 +292,11 @@
                     VerticalContentAlignment="Center"
                     Click="OnShowConnectForm"
                     ToolTip.Tip="Add Server">
+              <Button.ContextMenu>
+                <ContextMenu>
+                  <MenuItem Header="Import Servers (JSON)" Click="OnImportServers" />
+                </ContextMenu>
+              </Button.ContextMenu>
               <TextBlock Text="+" FontSize="22" FontWeight="Light"
                          Foreground="{DynamicResource SuccessBrush}"
                          HorizontalAlignment="Center" VerticalAlignment="Center" />
@@ -352,6 +357,7 @@
                             <MenuItem Header="Disconnect" Click="OnContextDisconnect" />
                             <Separator />
                             <MenuItem Header="Set Nickname" Click="OnContextSetNickname" />
+                            <MenuItem Header="Copy Server Info" Click="OnContextCopyServerInfo" />
                             <MenuItem Header="Edit Server" Click="OnContextEdit" />
                             <MenuItem Header="Remove Server" Click="OnContextRemoveServer" />
                           </ContextMenu>

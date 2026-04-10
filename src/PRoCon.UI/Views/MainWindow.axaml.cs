@@ -1670,6 +1670,217 @@ namespace PRoCon.UI.Views
             }
         }
 
+        private async void OnContextCopyServerInfo(object sender, RoutedEventArgs e)
+        {
+            if (sender is not MenuItem mi || mi.DataContext is not ServerEntry entry) return;
+
+            var info = new Newtonsoft.Json.Linq.JObject
+            {
+                ["host"] = entry.HostPort?.Split(':').FirstOrDefault() ?? "",
+                ["port"] = ushort.TryParse(entry.HostPort?.Split(':').LastOrDefault(), out var p) ? p : 0,
+                ["name"] = entry.ServerName ?? "",
+                ["gameType"] = entry.GameType ?? "",
+                ["nickname"] = entry.Nickname ?? "",
+                ["isLayer"] = entry.IsLayerConnection,
+            };
+
+            var json = info.ToString(Newtonsoft.Json.Formatting.Indented);
+            var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+            if (clipboard != null)
+                await clipboard.SetTextAsync(json);
+
+            UpdateStatus("SuccessBrush", "Server info copied to clipboard");
+        }
+
+        private async void OnImportServers(object sender, RoutedEventArgs e)
+        {
+            // Step 1: Paste JSON dialog
+            var pasteDialog = new Avalonia.Controls.Window
+            {
+                Title = "Import Servers",
+                Width = 500,
+                Height = 400,
+                WindowStartupLocation = Avalonia.Controls.WindowStartupLocation.CenterOwner,
+                CanResize = false
+            };
+
+            string pastedJson = null;
+            var pastePanel = new StackPanel { Margin = new Avalonia.Thickness(16), Spacing = 10 };
+            pastePanel.Children.Add(new TextBlock
+            {
+                Text = "Paste server JSON (single object or array):",
+                FontSize = 13,
+                FontWeight = Avalonia.Media.FontWeight.SemiBold
+            });
+            var jsonInput = new TextBox
+            {
+                AcceptsReturn = true,
+                Height = 260,
+                FontFamily = new Avalonia.Media.FontFamily("Consolas,Courier New,monospace"),
+                FontSize = 12,
+                Watermark = "{\n  \"host\": \"1.2.3.4\",\n  \"port\": 47200,\n  \"name\": \"My Server\"\n}"
+            };
+            pastePanel.Children.Add(jsonInput);
+            var pasteBtnPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 8, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right };
+            var pasteCancelBtn = new Button { Content = "Cancel", Padding = new Avalonia.Thickness(16, 6) };
+            pasteCancelBtn.Click += (s, a) => pasteDialog.Close();
+            var pasteOkBtn = new Button { Content = "Import", Padding = new Avalonia.Thickness(16, 6) };
+            pasteOkBtn.Click += (s, a) => { pastedJson = jsonInput.Text; pasteDialog.Close(); };
+            pasteBtnPanel.Children.Add(pasteCancelBtn);
+            pasteBtnPanel.Children.Add(pasteOkBtn);
+            pastePanel.Children.Add(pasteBtnPanel);
+            pasteDialog.Content = pastePanel;
+
+            await pasteDialog.ShowDialog(this);
+            if (string.IsNullOrWhiteSpace(pastedJson)) return;
+
+            // Step 2: Parse JSON — accept single object or array
+            List<Newtonsoft.Json.Linq.JObject> servers;
+            try
+            {
+                var token = Newtonsoft.Json.Linq.JToken.Parse(pastedJson);
+                if (token is Newtonsoft.Json.Linq.JArray arr)
+                    servers = arr.OfType<Newtonsoft.Json.Linq.JObject>().ToList();
+                else if (token is Newtonsoft.Json.Linq.JObject obj)
+                    servers = new List<Newtonsoft.Json.Linq.JObject> { obj };
+                else
+                {
+                    UpdateStatus("ErrorBrush", "Invalid JSON format");
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                UpdateStatus("ErrorBrush", $"JSON parse error: {ex.Message}");
+                return;
+            }
+
+            if (servers.Count == 0)
+            {
+                UpdateStatus("WarningBrush", "No servers found in JSON");
+                return;
+            }
+
+            // Step 3: Wizard — prompt for credentials per server
+            int imported = 0;
+            foreach (var srv in servers)
+            {
+                string host = srv["host"]?.ToString() ?? "";
+                ushort port = (ushort)(srv["port"]?.ToObject<int>() ?? 47200);
+                string name = srv["name"]?.ToString() ?? "";
+                string gameType = srv["gameType"]?.ToString() ?? "";
+                string nickname = srv["nickname"]?.ToString() ?? "";
+                bool isLayer = srv["isLayer"]?.ToObject<bool>() ?? false;
+
+                if (string.IsNullOrEmpty(host)) continue;
+
+                string hostPort = $"{host}:{port}";
+                if (_application.Connections.Contains(hostPort))
+                    continue; // skip duplicates
+
+                // Credential prompt
+                var credDialog = new Avalonia.Controls.Window
+                {
+                    Title = $"Credentials: {name ?? hostPort}",
+                    Width = 380,
+                    Height = isLayer ? 220 : 180,
+                    WindowStartupLocation = Avalonia.Controls.WindowStartupLocation.CenterOwner,
+                    CanResize = false
+                };
+
+                string enteredPassword = null;
+                string enteredUsername = null;
+                bool credConfirmed = false;
+
+                var credPanel = new StackPanel { Margin = new Avalonia.Thickness(16), Spacing = 10 };
+                credPanel.Children.Add(new TextBlock
+                {
+                    Text = $"Server {imported + 1}/{servers.Count}: {(string.IsNullOrEmpty(name) ? hostPort : name)}",
+                    FontSize = 13,
+                    FontWeight = Avalonia.Media.FontWeight.SemiBold
+                });
+                credPanel.Children.Add(new TextBlock { Text = hostPort, FontSize = 11, Foreground = Avalonia.Media.Brushes.Gray });
+
+                TextBox usernameInput = null;
+                if (isLayer)
+                {
+                    usernameInput = new TextBox { Watermark = "Username", FontSize = 13 };
+                    credPanel.Children.Add(usernameInput);
+                }
+
+                var passwordInput = new TextBox
+                {
+                    PasswordChar = '\u2022',
+                    Watermark = isLayer ? "Password" : "RCON Password",
+                    FontSize = 13
+                };
+                credPanel.Children.Add(passwordInput);
+
+                var credBtnPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 8, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right };
+                var skipBtn = new Button { Content = "Skip", Padding = new Avalonia.Thickness(12, 6) };
+                skipBtn.Click += (s, a) => credDialog.Close();
+                var addBtn = new Button { Content = "Add Server", Padding = new Avalonia.Thickness(16, 6) };
+                addBtn.Click += (s, a) =>
+                {
+                    enteredPassword = passwordInput.Text ?? "";
+                    enteredUsername = usernameInput?.Text ?? "";
+                    credConfirmed = true;
+                    credDialog.Close();
+                };
+                credBtnPanel.Children.Add(skipBtn);
+                credBtnPanel.Children.Add(addBtn);
+                credPanel.Children.Add(credBtnPanel);
+                credDialog.Content = credPanel;
+
+                await credDialog.ShowDialog(this);
+                if (!credConfirmed) continue;
+
+                // Add the server
+                string username = isLayer ? enteredUsername : "";
+                var connection = _application.AddConnection(host, port, username, enteredPassword);
+                if (connection != null)
+                {
+                    if (!string.IsNullOrEmpty(name))
+                        connection.ConnectionServerName = name;
+                    if (!string.IsNullOrEmpty(gameType))
+                        connection.CachedGameType = gameType;
+                    if (!string.IsNullOrEmpty(nickname))
+                        connection.Nickname = nickname;
+
+                    connection.AutomaticallyConnect = true;
+
+                    var entry = EnsureServerEntry(hostPort);
+                    WireClientEvents(connection, entry);
+
+                    if (!string.IsNullOrEmpty(name))
+                        entry.ServerName = name;
+                    if (!string.IsNullOrEmpty(gameType))
+                        entry.GameType = gameType;
+                    if (!string.IsNullOrEmpty(nickname))
+                        entry.Nickname = nickname;
+                    if (isLayer)
+                    {
+                        entry.IsLayerConnection = true;
+                        entry.LayerUsername = enteredUsername;
+                    }
+
+                    imported++;
+                }
+            }
+
+            if (imported > 0)
+            {
+                _application.SaveMainConfig();
+                SortAndGroupServers();
+                UpdateConnectionCount();
+                UpdateStatus("SuccessBrush", $"Imported {imported} server(s)");
+            }
+            else
+            {
+                UpdateStatus("WarningBrush", "No servers imported");
+            }
+        }
+
         private void OnContextEdit(object sender, RoutedEventArgs e)
         {
             if (sender is MenuItem mi && mi.DataContext is ServerEntry entry)
