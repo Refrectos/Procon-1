@@ -2398,3 +2398,141 @@ pStartPage-tblPackages-thLayerInstallStatus=Layer Install Status
 pStartPage-tblPackages-thInstallPackage=Install Package
 
 m_pStartPage_lblDeleteConnection=Are you sure you want <br/>to delete this connection?
+
+
+///////////////////////////////////
+// v2 UI — Navigation & Sidebar
+///////////////////////////////////
+nav.info=INFO
+nav.chat=CHAT
+nav.players=PLAYERS
+nav.maps=MAPS
+nav.bans=BANS
+nav.reserved=RESERVED
+nav.spectators=SPECTATORS
+nav.punkbuster=PUNKBUSTER
+nav.chatmod=CHAT MOD
+nav.settings=SETTINGS
+nav.plugins=PLUGINS
+nav.accounts=ACCOUNTS
+nav.events=EVENTS
+nav.console=CONSOLE
+nav.layer=LAYER
+
+///////////////////////////////////
+// v2 UI — Server Actions
+///////////////////////////////////
+action.connect=CONNECT
+action.disconnect=DISCONNECT
+action.autoconnect.on=AUTO-CONNECT: ON
+action.autoconnect.off=AUTO-CONNECT: OFF
+action.edit=EDIT
+action.remove=REMOVE
+action.addserver=Add Server
+action.setnickname=Set Nickname
+action.copyserverinfo=Copy Server Info
+action.importservers=Import Servers (JSON)
+action.removeserver=Remove Server
+action.editserver=Edit Server
+
+///////////////////////////////////
+// v2 UI — Sidebar & Title Bar
+///////////////////////////////////
+sidebar.dashboard=Dashboard
+sidebar.noservers=No servers configured
+titlebar.title=PRoCon
+
+///////////////////////////////////
+// v2 UI — Options Panel
+///////////////////////////////////
+options.general=General
+options.showtray=Show system tray icon
+options.closetotray=Close to system tray
+options.minimizetotray=Minimize to system tray
+options.animations=Enable animations
+options.language=Language
+options.language.label=Language:
+options.proxycheck=ProxyCheck.io (IP Checking)
+options.proxycheck.apikey=API Key:
+options.proxycheck.save=Save API Key
+options.proxycheck.status.saved=API key saved
+options.about=About PRoCon
+options.updates=Updates
+options.updates.check=Check for Updates
+options.updates.whatsnew=What's New
+options.datadir=Data:
+options.runtime=Runtime:
+
+///////////////////////////////////
+// v2 UI — Map List Panel
+///////////////////////////////////
+maplist.title=Map List
+maplist.available=Available Maps
+maplist.rotation=Current Rotation
+maplist.addtorotation=Add to Rotation
+maplist.remove=Remove
+maplist.moveup=Move Up
+maplist.movedown=Move Down
+maplist.setnext=Set as Next
+maplist.restartround=Restart Round
+maplist.runnextround=Run Next Round
+maplist.endround=End Round
+maplist.nomaps=No maps available (not connected)
+
+///////////////////////////////////
+// v2 UI — Ban List Panel
+///////////////////////////////////
+banlist.title=Ban List
+banlist.add=Add Ban
+banlist.remove=Remove Ban
+banlist.refresh=Refresh
+banlist.permanent=Permanent
+banlist.temporary=Temporary
+banlist.reason=Reason:
+
+///////////////////////////////////
+// v2 UI — Player Actions
+///////////////////////////////////
+player.kick=Kick
+player.kill=Kill
+player.ban=Ban
+player.move=Move
+player.say=Say
+player.yell=Yell
+player.reason=Reason:
+
+///////////////////////////////////
+// v2 UI — Dialogs
+///////////////////////////////////
+dialog.confirm=Confirm
+dialog.cancel=Cancel
+dialog.ok=OK
+dialog.yes=Yes
+dialog.no=No
+dialog.remove.title=Confirm Remove
+dialog.remove.message=Remove server {0}?
+dialog.nickname.title=Set Nickname
+dialog.nickname.prompt=Sidebar nickname (max 5 chars):
+dialog.nickname.clear=Clear
+dialog.import.title=Import Servers
+dialog.import.prompt=Paste server JSON (single object or array):
+dialog.import.button=Import
+dialog.import.skip=Skip
+dialog.import.addserver=Add Server
+dialog.import.credentials=Credentials: {0}
+dialog.import.password=RCON Password
+dialog.import.username=Username
+dialog.import.password.layer=Password
+dialog.import.success=Imported {0} server(s)
+dialog.import.noservers=No servers imported
+dialog.import.invalidjson=Invalid JSON format
+dialog.import.parseerror=JSON parse error: {0}
+
+///////////////////////////////////
+// v2 UI — Status Messages
+///////////////////////////////////
+status.connected=Connected
+status.connecting=Connecting...
+status.disconnected=Disconnected
+status.serverremoved=Server removed
+status.copied=Server info copied to clipboard

@@ -2363,3 +2363,141 @@ frmMain.exitToolStripMenuItem=Ende
 frmMain.helpToolStripMenuItem=Hilfe
 frmMain.donateTodayToolStripMenuItem=Donate Today!
 frmMain.proconHostingToolStripMenuItem=PRoCon Hosting Providers
+
+
+///////////////////////////////////
+// v2 UI — Navigation & Sidebar
+///////////////////////////////////
+nav.info=INFO
+nav.chat=CHAT
+nav.players=SPIELER
+nav.maps=KARTEN
+nav.bans=BANS
+nav.reserved=RESERVIERT
+nav.spectators=ZUSCHAUER
+nav.punkbuster=PUNKBUSTER
+nav.chatmod=CHAT MOD
+nav.settings=EINSTELLUNGEN
+nav.plugins=PLUGINS
+nav.accounts=KONTEN
+nav.events=EREIGNISSE
+nav.console=KONSOLE
+nav.layer=LAYER
+
+///////////////////////////////////
+// v2 UI — Server Actions
+///////////////////////////////////
+action.connect=VERBINDEN
+action.disconnect=TRENNEN
+action.autoconnect.on=AUTO-VERBINDEN: AN
+action.autoconnect.off=AUTO-VERBINDEN: AUS
+action.edit=BEARBEITEN
+action.remove=ENTFERNEN
+action.addserver=Server hinzufügen
+action.setnickname=Spitzname setzen
+action.copyserverinfo=Serverinfo kopieren
+action.importservers=Server importieren (JSON)
+action.removeserver=Server entfernen
+action.editserver=Server bearbeiten
+
+///////////////////////////////////
+// v2 UI — Sidebar & Title Bar
+///////////////////////////////////
+sidebar.dashboard=Dashboard
+sidebar.noservers=Keine Server konfiguriert
+titlebar.title=PRoCon
+
+///////////////////////////////////
+// v2 UI — Options Panel
+///////////////////////////////////
+options.general=Allgemein
+options.showtray=Infobereichssymbol anzeigen
+options.closetotray=In den Infobereich schließen
+options.minimizetotray=In den Infobereich minimieren
+options.animations=Animationen aktivieren
+options.language=Sprache
+options.language.label=Sprache:
+options.proxycheck=ProxyCheck.io (IP-Prüfung)
+options.proxycheck.apikey=API-Schlüssel:
+options.proxycheck.save=API-Schlüssel speichern
+options.proxycheck.status.saved=API-Schlüssel gespeichert
+options.about=Über PRoCon
+options.updates=Updates
+options.updates.check=Nach Updates suchen
+options.updates.whatsnew=Was ist neu
+options.datadir=Datenverzeichnis:
+options.runtime=Laufzeit:
+
+///////////////////////////////////
+// v2 UI — Map List Panel
+///////////////////////////////////
+maplist.title=Kartenliste
+maplist.available=Verfügbare Karten
+maplist.rotation=Aktuelle Rotation
+maplist.addtorotation=Zur Rotation hinzufügen
+maplist.remove=Entfernen
+maplist.moveup=Nach oben
+maplist.movedown=Nach unten
+maplist.setnext=Als nächste setzen
+maplist.restartround=Runde neu starten
+maplist.runnextround=Nächste Runde starten
+maplist.endround=Runde beenden
+maplist.nomaps=Keine Karten verfügbar (nicht verbunden)
+
+///////////////////////////////////
+// v2 UI — Ban List Panel
+///////////////////////////////////
+banlist.title=Bannliste
+banlist.add=Bann hinzufügen
+banlist.remove=Bann entfernen
+banlist.refresh=Aktualisieren
+banlist.permanent=Permanent
+banlist.temporary=Temporär
+banlist.reason=Grund:
+
+///////////////////////////////////
+// v2 UI — Player Actions
+///////////////////////////////////
+player.kick=Kicken
+player.kill=Töten
+player.ban=Bannen
+player.move=Verschieben
+player.say=Sagen
+player.yell=Schreien
+player.reason=Grund:
+
+///////////////////////////////////
+// v2 UI — Dialogs
+///////////////////////////////////
+dialog.confirm=Bestätigen
+dialog.cancel=Abbrechen
+dialog.ok=OK
+dialog.yes=Ja
+dialog.no=Nein
+dialog.remove.title=Entfernen bestätigen
+dialog.remove.message=Server {0} entfernen?
+dialog.nickname.title=Spitzname setzen
+dialog.nickname.prompt=Sidebar-Spitzname (max. 5 Zeichen):
+dialog.nickname.clear=Löschen
+dialog.import.title=Server importieren
+dialog.import.prompt=Server-JSON einfügen (einzelnes Objekt oder Array):
+dialog.import.button=Importieren
+dialog.import.skip=Überspringen
+dialog.import.addserver=Server hinzufügen
+dialog.import.credentials=Zugangsdaten: {0}
+dialog.import.password=RCON-Passwort
+dialog.import.username=Benutzername
+dialog.import.password.layer=Passwort
+dialog.import.success={0} Server importiert
+dialog.import.noservers=Keine Server importiert
+dialog.import.invalidjson=Ungültiges JSON-Format
+dialog.import.parseerror=JSON-Analysefehler: {0}
+
+///////////////////////////////////
+// v2 UI — Status Messages
+///////////////////////////////////
+status.connected=Verbunden
+status.connecting=Verbindung wird hergestellt...
+status.disconnected=Getrennt
+status.serverremoved=Server entfernt
+status.copied=Serverinfo in Zwischenablage kopiert

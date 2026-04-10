@@ -2397,3 +2397,141 @@ pStartPage-tblPackages-thLayerInstallStatus=Panel de Instalación
 pStartPage-tblPackages-thInstallPackage=Instalar Paquete
 
 m_pStartPage_lblDeleteConnection=¿Seguro que quieres eliminar este servidor?
+
+
+///////////////////////////////////
+// v2 UI — Navigation & Sidebar
+///////////////////////////////////
+nav.info=INFO
+nav.chat=CHAT
+nav.players=JUGADORES
+nav.maps=MAPAS
+nav.bans=BANS
+nav.reserved=RESERVADOS
+nav.spectators=ESPECTADORES
+nav.punkbuster=PUNKBUSTER
+nav.chatmod=MOD CHAT
+nav.settings=AJUSTES
+nav.plugins=PLUGINS
+nav.accounts=CUENTAS
+nav.events=EVENTOS
+nav.console=CONSOLA
+nav.layer=LAYER
+
+///////////////////////////////////
+// v2 UI — Server Actions
+///////////////////////////////////
+action.connect=CONECTAR
+action.disconnect=DESCONECTAR
+action.autoconnect.on=AUTO-CONECTAR: ON
+action.autoconnect.off=AUTO-CONECTAR: OFF
+action.edit=EDITAR
+action.remove=ELIMINAR
+action.addserver=Agregar servidor
+action.setnickname=Establecer apodo
+action.copyserverinfo=Copiar info del servidor
+action.importservers=Importar servidores (JSON)
+action.removeserver=Eliminar servidor
+action.editserver=Editar servidor
+
+///////////////////////////////////
+// v2 UI — Sidebar & Title Bar
+///////////////////////////////////
+sidebar.dashboard=Panel principal
+sidebar.noservers=No hay servidores configurados
+titlebar.title=PRoCon
+
+///////////////////////////////////
+// v2 UI — Options Panel
+///////////////////////////////////
+options.general=General
+options.showtray=Mostrar icono en bandeja del sistema
+options.closetotray=Cerrar a bandeja del sistema
+options.minimizetotray=Minimizar a bandeja del sistema
+options.animations=Activar animaciones
+options.language=Idioma
+options.language.label=Idioma:
+options.proxycheck=ProxyCheck.io (Verificación IP)
+options.proxycheck.apikey=Clave API:
+options.proxycheck.save=Guardar clave API
+options.proxycheck.status.saved=Clave API guardada
+options.about=Acerca de PRoCon
+options.updates=Actualizaciones
+options.updates.check=Buscar actualizaciones
+options.updates.whatsnew=Novedades
+options.datadir=Directorio de datos:
+options.runtime=Runtime:
+
+///////////////////////////////////
+// v2 UI — Map List Panel
+///////////////////////////////////
+maplist.title=Lista de mapas
+maplist.available=Mapas disponibles
+maplist.rotation=Rotación actual
+maplist.addtorotation=Agregar a rotación
+maplist.remove=Eliminar
+maplist.moveup=Subir
+maplist.movedown=Bajar
+maplist.setnext=Establecer como siguiente
+maplist.restartround=Reiniciar ronda
+maplist.runnextround=Iniciar siguiente ronda
+maplist.endround=Terminar ronda
+maplist.nomaps=No hay mapas disponibles (no conectado)
+
+///////////////////////////////////
+// v2 UI — Ban List Panel
+///////////////////////////////////
+banlist.title=Lista de bans
+banlist.add=Agregar ban
+banlist.remove=Eliminar ban
+banlist.refresh=Actualizar
+banlist.permanent=Permanente
+banlist.temporary=Temporal
+banlist.reason=Razón:
+
+///////////////////////////////////
+// v2 UI — Player Actions
+///////////////////////////////////
+player.kick=Expulsar
+player.kill=Matar
+player.ban=Banear
+player.move=Mover
+player.say=Decir
+player.yell=Gritar
+player.reason=Razón:
+
+///////////////////////////////////
+// v2 UI — Dialogs
+///////////////////////////////////
+dialog.confirm=Confirmar
+dialog.cancel=Cancelar
+dialog.ok=OK
+dialog.yes=Sí
+dialog.no=No
+dialog.remove.title=Confirmar eliminación
+dialog.remove.message=¿Eliminar servidor {0}?
+dialog.nickname.title=Establecer apodo
+dialog.nickname.prompt=Apodo del sidebar (máx. 5 caracteres):
+dialog.nickname.clear=Borrar
+dialog.import.title=Importar servidores
+dialog.import.prompt=Pegar JSON de servidor (objeto único o array):
+dialog.import.button=Importar
+dialog.import.skip=Omitir
+dialog.import.addserver=Agregar servidor
+dialog.import.credentials=Credenciales: {0}
+dialog.import.password=Contraseña RCON
+dialog.import.username=Nombre de usuario
+dialog.import.password.layer=Contraseña
+dialog.import.success={0} servidor(es) importado(s)
+dialog.import.noservers=No se importaron servidores
+dialog.import.invalidjson=Formato JSON inválido
+dialog.import.parseerror=Error de análisis JSON: {0}
+
+///////////////////////////////////
+// v2 UI — Status Messages
+///////////////////////////////////
+status.connected=Conectado
+status.connecting=Conectando...
+status.disconnected=Desconectado
+status.serverremoved=Servidor eliminado
+status.copied=Info del servidor copiada al portapapeles
