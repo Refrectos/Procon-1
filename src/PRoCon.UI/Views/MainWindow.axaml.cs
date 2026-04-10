@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Controls.Presenters;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -134,6 +135,13 @@ namespace PRoCon.UI.Views
         private TextBlock _landingServerCount;
         private TextBlock _landingConnectedCount;
         private TextBlock _landingTotalPlayers;
+        private TextBlock _landingSubtitle;
+        private TextBlock _landingServersLabel;
+        private TextBlock _landingOnlineLabel;
+        private TextBlock _landingPlayersLabel;
+        private Button _landingAddServerButton;
+        private MenuItem _ctxImportServers;
+        private ContentPresenter[] _colHeaderPresenters;
         private Grid _teamGrid;
         private TextBox _consoleInput;
         private ListBox _consoleSuggestions;
@@ -226,6 +234,15 @@ namespace PRoCon.UI.Views
             _landingServerCount = this.FindControl<TextBlock>("LandingServerCount");
             _landingConnectedCount = this.FindControl<TextBlock>("LandingConnectedCount");
             _landingTotalPlayers = this.FindControl<TextBlock>("LandingTotalPlayers");
+            _landingSubtitle = this.FindControl<TextBlock>("LandingSubtitle");
+            _landingServersLabel = this.FindControl<TextBlock>("LandingServersLabel");
+            _landingOnlineLabel = this.FindControl<TextBlock>("LandingOnlineLabel");
+            _landingPlayersLabel = this.FindControl<TextBlock>("LandingPlayersLabel");
+            _landingAddServerButton = this.FindControl<Button>("LandingAddServerButton");
+            _ctxImportServers = this.FindControl<MenuItem>("CtxImportServers");
+            _colHeaderPresenters = new ContentPresenter[4];
+            for (int t = 0; t < 4; t++)
+                _colHeaderPresenters[t] = this.FindControl<ContentPresenter>($"ColHeaderPresenter{t + 1}");
             _teamGrid = this.FindControl<Grid>("TeamGrid");
             _consoleInput = this.FindControl<TextBox>("ConsoleInput");
             _consoleSuggestions = this.FindControl<ListBox>("ConsoleSuggestions");
@@ -2546,6 +2563,82 @@ namespace PRoCon.UI.Views
                 _editServerButton.Content = Services.Loc.T("action.edit", "EDIT");
             if (_removeServerButton != null)
                 _removeServerButton.Content = Services.Loc.T("action.remove", "REMOVE");
+
+            // Import servers context menu item (directly named, not in DataTemplate)
+            if (_ctxImportServers != null)
+                _ctxImportServers.Header = Services.Loc.T("action.importservers", "Import Servers (JSON)");
+
+            // Landing page static labels
+            if (_landingSubtitle != null)
+                _landingSubtitle.Text = Services.Loc.T("landing.subtitle", "FROSTBITE RCON ADMINISTRATION");
+            if (_landingServersLabel != null)
+                _landingServersLabel.Text = Services.Loc.T("landing.servers", "SERVERS");
+            if (_landingOnlineLabel != null)
+                _landingOnlineLabel.Text = Services.Loc.T("landing.online", "ONLINE");
+            if (_landingPlayersLabel != null)
+                _landingPlayersLabel.Text = Services.Loc.T("landing.players", "PLAYERS");
+            if (_landingAddServerButton != null)
+                _landingAddServerButton.Content = Services.Loc.T("landing.addserver", "+ ADD SERVER");
+
+            // Player column headers — rebuild template with localized strings
+            RebuildPlayerColumnHeaderTemplate();
+        }
+
+        private void RebuildPlayerColumnHeaderTemplate()
+        {
+            string colPlayer = Services.Loc.T("player.col.player", "Player");
+            string colScore = Services.Loc.T("player.col.score", "Score");
+            string colKills = Services.Loc.T("player.col.kills", "K");
+            string colDeaths = Services.Loc.T("player.col.deaths", "D");
+            string colPing = Services.Loc.T("player.col.ping", "Ping");
+            string colSquad = Services.Loc.T("player.col.squad", "Squad");
+            string colThreat = Services.Loc.T("player.col.threat", "Threat");
+
+            if (_colHeaderPresenters == null)
+                return;
+
+            foreach (var presenter in _colHeaderPresenters)
+            {
+                if (presenter?.Child is Grid grid && grid.Children.Count >= 7)
+                {
+                    if (grid.Children[0] is TextBlock tbPlayer) tbPlayer.Text = colPlayer;
+                    if (grid.Children[1] is TextBlock tbScore) tbScore.Text = colScore;
+                    if (grid.Children[2] is TextBlock tbKills) tbKills.Text = colKills;
+                    if (grid.Children[3] is TextBlock tbDeaths) tbDeaths.Text = colDeaths;
+                    if (grid.Children[4] is TextBlock tbPing) tbPing.Text = colPing;
+                    if (grid.Children[5] is TextBlock tbSquad) tbSquad.Text = colSquad;
+                    if (grid.Children[6] is TextBlock tbThreat) tbThreat.Text = colThreat;
+                }
+            }
+        }
+
+        private void OnServerContextMenuOpening(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (sender is not ContextMenu menu) return;
+            var items = menu.Items.OfType<MenuItem>().ToList();
+            if (items.Count < 6) return;
+            items[0].Header = Services.Loc.T("context.connect", "Connect");
+            items[1].Header = Services.Loc.T("context.disconnect", "Disconnect");
+            items[2].Header = Services.Loc.T("context.setnickname", "Set Nickname");
+            items[3].Header = Services.Loc.T("context.copyserverinfo", "Copy Server Info");
+            items[4].Header = Services.Loc.T("context.editserver", "Edit Server");
+            items[5].Header = Services.Loc.T("context.removeserver", "Remove Server");
+        }
+
+        private void OnPlayerContextMenuOpening(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (sender is not ContextMenu menu) return;
+            var items = menu.Items.OfType<MenuItem>().ToList();
+            if (items.Count < 9) return;
+            items[0].Header = Services.Loc.T("context.kill", "Kill");
+            items[1].Header = Services.Loc.T("context.kick", "Kick...");
+            items[2].Header = Services.Loc.TF("context.moveteam", "Move to Team {0}", 1);
+            items[3].Header = Services.Loc.TF("context.moveteam", "Move to Team {0}", 2);
+            items[4].Header = Services.Loc.TF("context.moveteam", "Move to Team {0}", 3);
+            items[5].Header = Services.Loc.TF("context.moveteam", "Move to Team {0}", 4);
+            items[6].Header = Services.Loc.T("context.ban", "Ban (Name)...");
+            items[7].Header = Services.Loc.T("context.copyname", "Copy Name");
+            items[8].Header = Services.Loc.T("context.copyguid", "Copy EAGUID");
         }
 
         /// <summary>Static brush resolver for use in static methods.</summary>

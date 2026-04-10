@@ -132,7 +132,7 @@
     <DataTemplate x:Key="PlayerItemTemplate">
       <Grid ColumnDefinitions="16,22,*,45,35,40,30,50,40" Margin="2,1" Opacity="{Binding RowOpacity}">
         <Grid.ContextMenu>
-          <ContextMenu>
+          <ContextMenu Opening="OnPlayerContextMenuOpening">
             <MenuItem Header="Kill" Click="OnPlayerKill" />
             <MenuItem Header="Kick..." Click="OnPlayerKick" />
             <Separator />
@@ -290,7 +290,7 @@
                     ToolTip.Tip="Add Server">
               <Button.ContextMenu>
                 <ContextMenu>
-                  <MenuItem Header="Import Servers (JSON)" Click="OnImportServers" />
+                  <MenuItem Name="CtxImportServers" Header="Import Servers (JSON)" Click="OnImportServers" />
                 </ContextMenu>
               </Button.ContextMenu>
               <TextBlock Text="+" FontSize="22" FontWeight="Light"
@@ -356,7 +356,7 @@
                           </StackPanel>
                         </ToolTip.Tip>
                         <Button.ContextMenu>
-                          <ContextMenu>
+                          <ContextMenu Opening="OnServerContextMenuOpening">
                             <MenuItem Header="Connect" Click="OnContextConnect" />
                             <MenuItem Header="Disconnect" Click="OnContextDisconnect" />
                             <Separator />
@@ -623,7 +623,7 @@
                            Foreground="{DynamicResource PrimaryBrush}"
                            HorizontalAlignment="Center"
  />
-                <TextBlock Text="FROSTBITE RCON ADMINISTRATION" FontSize="10"
+                <TextBlock Name="LandingSubtitle" Text="FROSTBITE RCON ADMINISTRATION" FontSize="10"
                            Foreground="{DynamicResource TextDisabledBrush}"
                            HorizontalAlignment="Center"
  Margin="0,6,0,0" />
@@ -645,7 +645,7 @@
                 </Border>
 
                 <!-- Add Server CTA -->
-                <Button Content="+ ADD SERVER"
+                <Button Name="LandingAddServerButton" Content="+ ADD SERVER"
                         Padding="24,10" FontSize="10"
                         HorizontalAlignment="Center" Margin="0,24,0,0"
                         Click="OnShowConnectForm" />
@@ -660,7 +660,7 @@
                     <TextBlock Name="LandingServerCount" Text="0" FontSize="22" FontWeight="Bold"
                                Foreground="{DynamicResource PrimaryBrush}"
                                HorizontalAlignment="Center" />
-                    <TextBlock Text="SERVERS" FontSize="11"
+                    <TextBlock Name="LandingServersLabel" Text="SERVERS" FontSize="11"
                                Foreground="{DynamicResource TextDisabledBrush}"
                                HorizontalAlignment="Center" />
                   </StackPanel>
@@ -669,7 +669,7 @@
                     <TextBlock Name="LandingConnectedCount" Text="0" FontSize="22" FontWeight="Bold"
                                Foreground="{DynamicResource SuccessBrush}"
                                HorizontalAlignment="Center" />
-                    <TextBlock Text="ONLINE" FontSize="11"
+                    <TextBlock Name="LandingOnlineLabel" Text="ONLINE" FontSize="11"
                                Foreground="{DynamicResource TextDisabledBrush}"
                                HorizontalAlignment="Center" />
                   </StackPanel>
@@ -678,7 +678,7 @@
                     <TextBlock Name="LandingTotalPlayers" Text="0" FontSize="22" FontWeight="Bold"
                                Foreground="{DynamicResource SecondaryBrush}"
                                HorizontalAlignment="Center" />
-                    <TextBlock Text="PLAYERS" FontSize="11"
+                    <TextBlock Name="LandingPlayersLabel" Text="PLAYERS" FontSize="11"
                                Foreground="{DynamicResource TextDisabledBrush}"
                                HorizontalAlignment="Center" />
                   </StackPanel>
@@ -855,7 +855,7 @@
                                      Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Center" />
                         </DockPanel>
                       </Border>
-                      <ContentPresenter DockPanel.Dock="Top" ContentTemplate="{StaticResource PlayerColumnHeaders}" Margin="4,2,4,0" />
+                      <ContentPresenter Name="ColHeaderPresenter1" DockPanel.Dock="Top" ContentTemplate="{StaticResource PlayerColumnHeaders}" Margin="4,2,4,0" />
                       <ListBox Name="TeamList1" Background="Transparent"
                                Foreground="{DynamicResource TextPrimaryBrush}" FontSize="10"
                                SelectionMode="Multiple"
@@ -884,7 +884,7 @@
                                      Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Center" />
                         </DockPanel>
                       </Border>
-                      <ContentPresenter DockPanel.Dock="Top" ContentTemplate="{StaticResource PlayerColumnHeaders}" Margin="4,2,4,0" />
+                      <ContentPresenter Name="ColHeaderPresenter2" DockPanel.Dock="Top" ContentTemplate="{StaticResource PlayerColumnHeaders}" Margin="4,2,4,0" />
                       <ListBox Name="TeamList2" Background="Transparent"
                                Foreground="{DynamicResource TextPrimaryBrush}" FontSize="10"
                                SelectionMode="Multiple"
@@ -913,7 +913,7 @@
                                      Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Center" />
                         </DockPanel>
                       </Border>
-                      <ContentPresenter DockPanel.Dock="Top" ContentTemplate="{StaticResource PlayerColumnHeaders}" Margin="4,2,4,0" />
+                      <ContentPresenter Name="ColHeaderPresenter3" DockPanel.Dock="Top" ContentTemplate="{StaticResource PlayerColumnHeaders}" Margin="4,2,4,0" />
                       <ListBox Name="TeamList3" Background="Transparent"
                                Foreground="{DynamicResource TextPrimaryBrush}" FontSize="10"
                                SelectionMode="Multiple"
@@ -942,7 +942,7 @@
                                      Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Center" />
                         </DockPanel>
                       </Border>
-                      <ContentPresenter DockPanel.Dock="Top" ContentTemplate="{StaticResource PlayerColumnHeaders}" Margin="4,2,4,0" />
+                      <ContentPresenter Name="ColHeaderPresenter4" DockPanel.Dock="Top" ContentTemplate="{StaticResource PlayerColumnHeaders}" Margin="4,2,4,0" />
                       <ListBox Name="TeamList4" Background="Transparent"
                                Foreground="{DynamicResource TextPrimaryBrush}" FontSize="10"
                                SelectionMode="Multiple"

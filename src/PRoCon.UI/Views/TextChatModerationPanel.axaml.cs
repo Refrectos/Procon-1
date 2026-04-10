@@ -57,6 +57,20 @@ namespace PRoCon.UI.Views
 
             var colLevel = this.FindControl<TextBlock>("ChatModColLevel");
             if (colLevel != null) colLevel.Text = Loc.T("chatmod.col.level", "Moderation Level");
+
+            // Moderation level ComboBox items
+            var moderationLevelCombo = this.FindControl<ComboBox>("ModerationLevelCombo");
+            if (moderationLevelCombo?.Items is not null)
+            {
+                var levelItems = moderationLevelCombo.Items.OfType<ComboBoxItem>().ToList();
+                if (levelItems.Count >= 4)
+                {
+                    levelItems[0].Content = Loc.T("chatmod.level.normal", "Normal");
+                    levelItems[1].Content = Loc.T("chatmod.level.muted", "Muted");
+                    levelItems[2].Content = Loc.T("chatmod.level.voice", "Voice");
+                    levelItems[3].Content = Loc.T("chatmod.level.admin", "Admin");
+                }
+            }
         }
 
         public void SetClient(PRoConClient client)

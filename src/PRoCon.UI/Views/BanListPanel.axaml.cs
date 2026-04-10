@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -55,6 +56,54 @@ namespace PRoCon.UI.Views
 
             var addBanBtn = this.FindControl<Button>("AddBanButton");
             if (addBanBtn != null) addBanBtn.Content = Loc.T("banlist.add", "Add Ban");
+
+            // Ban ID type ComboBox items
+            var banIdTypeCombo = this.FindControl<ComboBox>("BanIdTypeCombo");
+            if (banIdTypeCombo?.Items is not null)
+            {
+                var idItems = banIdTypeCombo.Items.OfType<ComboBoxItem>().ToList();
+                if (idItems.Count >= 3)
+                {
+                    idItems[0].Content = Loc.T("banlist.type.name", "Name");
+                    idItems[1].Content = Loc.T("banlist.type.guid", "EA GUID");
+                    idItems[2].Content = Loc.T("banlist.type.ip", "IP Address");
+                }
+            }
+
+            // Ban duration type ComboBox items
+            var banDurationTypeCombo = this.FindControl<ComboBox>("BanDurationTypeCombo");
+            if (banDurationTypeCombo?.Items is not null)
+            {
+                var durationTypeItems = banDurationTypeCombo.Items.OfType<ComboBoxItem>().ToList();
+                if (durationTypeItems.Count >= 3)
+                {
+                    durationTypeItems[0].Content = Loc.T("banlist.duration.perm", "Permanent");
+                    durationTypeItems[1].Content = Loc.T("banlist.duration.temp", "Temporary");
+                    durationTypeItems[2].Content = Loc.T("banlist.duration.round", "Round");
+                }
+            }
+
+            // Temporary duration predefined values ComboBox items
+            var tempDurationCombo = this.FindControl<ComboBox>("TempDurationCombo");
+            if (tempDurationCombo?.Items is not null)
+            {
+                var tempItems = tempDurationCombo.Items.OfType<ComboBoxItem>().ToList();
+                if (tempItems.Count >= 12)
+                {
+                    tempItems[0].Content = Loc.T("banlist.duration.5min", "5 minutes");
+                    tempItems[1].Content = Loc.T("banlist.duration.15min", "15 minutes");
+                    tempItems[2].Content = Loc.T("banlist.duration.30min", "30 minutes");
+                    tempItems[3].Content = Loc.T("banlist.duration.1hr", "1 hour");
+                    tempItems[4].Content = Loc.T("banlist.duration.2hr", "2 hours");
+                    tempItems[5].Content = Loc.T("banlist.duration.6hr", "6 hours");
+                    tempItems[6].Content = Loc.T("banlist.duration.12hr", "12 hours");
+                    tempItems[7].Content = Loc.T("banlist.duration.1day", "1 day");
+                    tempItems[8].Content = Loc.T("banlist.duration.3days", "3 days");
+                    tempItems[9].Content = Loc.T("banlist.duration.1week", "1 week");
+                    tempItems[10].Content = Loc.T("banlist.duration.1month", "1 month");
+                    tempItems[11].Content = Loc.T("banlist.duration.custom", "Custom");
+                }
+            }
         }
 
         public void SetClient(PRoConClient client)
