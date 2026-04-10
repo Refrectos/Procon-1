@@ -28,6 +28,52 @@ namespace PRoCon.UI.Views
         public OptionsPanel()
         {
             InitializeComponent();
+            ApplyLocalization();
+        }
+
+        private void ApplyLocalization()
+        {
+            var generalLabel = this.FindControl<TextBlock>("GeneralSectionLabel");
+            if (generalLabel != null) generalLabel.Text = Services.Loc.T("options.general", "General");
+
+            var showTrayCheck = this.FindControl<CheckBox>("ShowTrayIconCheck");
+            if (showTrayCheck != null) showTrayCheck.Content = Services.Loc.T("options.showtray", "Show system tray icon");
+
+            var closeToTrayCheck = this.FindControl<CheckBox>("CloseToTrayCheck");
+            if (closeToTrayCheck != null) closeToTrayCheck.Content = Services.Loc.T("options.closetotray", "Close to system tray");
+
+            var minimizeToTrayCheck = this.FindControl<CheckBox>("MinimizeToTrayCheck");
+            if (minimizeToTrayCheck != null) minimizeToTrayCheck.Content = Services.Loc.T("options.minimizetotray", "Minimize to system tray");
+
+            var animationsCheck = this.FindControl<CheckBox>("EnableAnimationsCheck");
+            if (animationsCheck != null) animationsCheck.Content = Services.Loc.T("options.animations", "Enable animations");
+
+            var languageLabel = this.FindControl<TextBlock>("LanguageSectionLabel");
+            if (languageLabel != null) languageLabel.Text = Services.Loc.T("options.language", "Language");
+
+            var languageFieldLabel = this.FindControl<TextBlock>("LanguageLabel");
+            if (languageFieldLabel != null) languageFieldLabel.Text = Services.Loc.T("options.language.label", "Language:");
+
+            var proxyCheckLabel = this.FindControl<TextBlock>("ProxyCheckSectionLabel");
+            if (proxyCheckLabel != null) proxyCheckLabel.Text = Services.Loc.T("options.proxycheck", "IP Checking (ProxyCheck.io v3)");
+
+            var apiKeyLabel = this.FindControl<TextBlock>("ApiKeyLabel");
+            if (apiKeyLabel != null) apiKeyLabel.Text = Services.Loc.T("options.proxycheck.apikey", "API Key:");
+
+            var saveApiKeyBtn = this.FindControl<Button>("SaveApiKeyButton");
+            if (saveApiKeyBtn != null) saveApiKeyBtn.Content = Services.Loc.T("options.proxycheck.save", "Save API Key");
+
+            var whatsNewLabel = this.FindControl<TextBlock>("WhatsNewSectionLabel");
+            if (whatsNewLabel != null) whatsNewLabel.Text = Services.Loc.T("options.updates.whatsnew", "What's New");
+
+            var releaseNotesBtn = this.FindControl<Button>("ViewReleaseNotesButton");
+            if (releaseNotesBtn != null) releaseNotesBtn.Content = Services.Loc.T("options.updates.whatsnew", "VIEW RELEASE NOTES");
+
+            var aboutLabel = this.FindControl<TextBlock>("AboutSectionLabel");
+            if (aboutLabel != null) aboutLabel.Text = Services.Loc.T("options.about", "About PRoCon");
+
+            var checkUpdateBtn = this.FindControl<Button>("CheckUpdateButton");
+            if (checkUpdateBtn != null) checkUpdateBtn.Content = Services.Loc.T("options.updates.check", "CHECK FOR UPDATES");
         }
 
         public void SetClient(PRoConClient client)

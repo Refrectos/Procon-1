@@ -11,7 +11,7 @@
               BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
               CornerRadius="3" Padding="16">
         <StackPanel Spacing="10">
-          <TextBlock Text="General" FontSize="15" FontWeight="SemiBold"
+          <TextBlock Name="GeneralSectionLabel" Text="General" FontSize="15" FontWeight="SemiBold"
                      Foreground="{DynamicResource PrimaryBrush}" />
 
           <StackPanel Spacing="8" Margin="0,4,0,0">
@@ -37,11 +37,11 @@
               BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
               CornerRadius="3" Padding="16">
         <StackPanel Spacing="10">
-          <TextBlock Text="Language" FontSize="15" FontWeight="SemiBold"
+          <TextBlock Name="LanguageSectionLabel" Text="Language" FontSize="15" FontWeight="SemiBold"
                      Foreground="{DynamicResource PrimaryBrush}" />
 
           <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,4,0,0">
-            <TextBlock Text="Language:"
+            <TextBlock Name="LanguageLabel" Text="Language:"
                        Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" />
             <ComboBox Name="LanguageComboBox" Width="200"
                       Background="{DynamicResource InputBackgroundBrush}"
@@ -60,19 +60,19 @@
               BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
               CornerRadius="3" Padding="16">
         <StackPanel Spacing="10">
-          <TextBlock Text="IP Checking (ProxyCheck.io v3)" FontSize="15" FontWeight="SemiBold"
+          <TextBlock Name="ProxyCheckSectionLabel" Text="IP Checking (ProxyCheck.io v3)" FontSize="15" FontWeight="SemiBold"
                      Foreground="{DynamicResource PrimaryBrush}" />
           <TextBlock Text="Automatically checks player IPs for VPN/proxy usage and geolocation. Free plan allows 1,000 lookups per day with 48-hour caching."
                      Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" TextWrapping="Wrap" />
           <StackPanel Orientation="Horizontal" Spacing="8">
-            <TextBlock Text="API Key:" Foreground="{DynamicResource TextSecondaryBrush}"
+            <TextBlock Name="ApiKeyLabel" Text="API Key:" Foreground="{DynamicResource TextSecondaryBrush}"
                        VerticalAlignment="Center" Width="80" />
             <TextBox Name="ProxyCheckApiKeyInput" Width="300"
                      Watermark="Leave blank for free tier (1K/day)"
                      Background="{DynamicResource InputBackgroundBrush}"
                      Foreground="{DynamicResource TextPrimaryBrush}"
                      BorderBrush="{DynamicResource BorderBrush}" />
-            <Button Content="Save" Padding="12,6" CornerRadius="4"
+            <Button Name="SaveApiKeyButton" Content="Save" Padding="12,6" CornerRadius="4"
                     Background="{DynamicResource ButtonPrimaryBrush}"
                     Foreground="{DynamicResource ButtonPrimaryTextBrush}"
                     Click="OnSaveProxyCheckKey" />
@@ -87,11 +87,11 @@
               BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
               CornerRadius="3" Padding="16" Margin="0,0,0,12">
         <StackPanel Spacing="8">
-          <TextBlock Text="What's New" FontSize="15" FontWeight="SemiBold"
+          <TextBlock Name="WhatsNewSectionLabel" Text="What's New" FontSize="15" FontWeight="SemiBold"
                      Foreground="{DynamicResource PrimaryBrush}" />
           <TextBlock Text="View release notes and changelog for recent PRoCon versions."
                      Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" />
-          <Button Content="VIEW RELEASE NOTES"
+          <Button Name="ViewReleaseNotesButton" Content="VIEW RELEASE NOTES"
                   Background="{DynamicResource ButtonSecondaryBrush}"
                   Foreground="{DynamicResource ButtonSecondaryTextBrush}"
                   Padding="12,6" CornerRadius="3" FontSize="10" FontWeight="SemiBold"
@@ -105,7 +105,7 @@
               BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
               CornerRadius="3" Padding="16">
         <StackPanel Spacing="8">
-          <TextBlock Text="About PRoCon" FontSize="15" FontWeight="SemiBold"
+          <TextBlock Name="AboutSectionLabel" Text="About PRoCon" FontSize="15" FontWeight="SemiBold"
                      Foreground="{DynamicResource PrimaryBrush}" />
           <TextBlock Name="VersionText" Text="PRoCon Frostbite v2.0.0"
                      Foreground="{DynamicResource TextPrimaryBrush}" FontSize="14" FontWeight="SemiBold" />

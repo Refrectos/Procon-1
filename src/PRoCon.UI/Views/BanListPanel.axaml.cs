@@ -6,6 +6,7 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using PRoCon.Core;
 using PRoCon.Core.Remote;
+using PRoCon.UI.Services;
 
 namespace PRoCon.UI.Views
 {
@@ -20,6 +21,40 @@ namespace PRoCon.UI.Views
         public BanListPanel()
         {
             InitializeComponent();
+            ApplyLocalization();
+        }
+
+        private void ApplyLocalization()
+        {
+            var header = this.FindControl<TextBlock>("HeaderText");
+            if (header != null) header.Text = Loc.T("banlist.title", "Ban List");
+
+            var refreshBtn = this.FindControl<Button>("RefreshButton");
+            if (refreshBtn != null) refreshBtn.Content = Loc.T("banlist.refresh", "Refresh");
+
+            var unbanBtn = this.FindControl<Button>("UnbanButton");
+            if (unbanBtn != null) unbanBtn.Content = Loc.T("banlist.remove", "Unban Selected");
+
+            var clearBtn = this.FindControl<Button>("ClearAllButton");
+            if (clearBtn != null) clearBtn.Content = Loc.T("banlist.clearall", "Clear All Bans");
+
+            var addBanLabel = this.FindControl<TextBlock>("AddBanLabel");
+            if (addBanLabel != null) addBanLabel.Text = Loc.T("banlist.add", "Add Ban");
+
+            var typeLabel = this.FindControl<TextBlock>("TypeLabel");
+            if (typeLabel != null) typeLabel.Text = Loc.T("banlist.type", "Type:");
+
+            var idLabel = this.FindControl<TextBlock>("IdLabel");
+            if (idLabel != null) idLabel.Text = Loc.T("banlist.id", "ID*:");
+
+            var reasonLabel = this.FindControl<TextBlock>("ReasonLabel");
+            if (reasonLabel != null) reasonLabel.Text = Loc.T("banlist.reason", "Reason*:");
+
+            var durationLabel = this.FindControl<TextBlock>("DurationLabel");
+            if (durationLabel != null) durationLabel.Text = Loc.T("banlist.duration", "Duration:");
+
+            var addBanBtn = this.FindControl<Button>("AddBanButton");
+            if (addBanBtn != null) addBanBtn.Content = Loc.T("banlist.add", "Add Ban");
         }
 
         public void SetClient(PRoConClient client)

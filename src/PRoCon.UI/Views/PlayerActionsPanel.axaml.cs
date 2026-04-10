@@ -7,6 +7,7 @@ using Avalonia.Interactivity;
 using PRoCon.Core;
 using PRoCon.Core.Remote;
 using PRoCon.UI.Models;
+using PRoCon.UI.Services;
 
 namespace PRoCon.UI.Views
 {
@@ -18,6 +19,37 @@ namespace PRoCon.UI.Views
         public PlayerActionsPanel()
         {
             InitializeComponent();
+            ApplyLocalization();
+        }
+
+        private void ApplyLocalization()
+        {
+            var messageReasonLabel = this.FindControl<TextBlock>("MessageReasonLabel");
+            if (messageReasonLabel != null) messageReasonLabel.Text = Loc.T("player.reason", "MESSAGE / REASON");
+
+            var actionsLabel = this.FindControl<TextBlock>("ActionsLabel");
+            if (actionsLabel != null) actionsLabel.Text = Loc.T("player.actions", "ACTIONS");
+
+            var sayBtn = this.FindControl<Button>("SayButton");
+            if (sayBtn != null) sayBtn.Content = Loc.T("player.say", "SAY ALL");
+
+            var yellBtn = this.FindControl<Button>("YellButton");
+            if (yellBtn != null) yellBtn.Content = Loc.T("player.yell", "YELL ALL");
+
+            var killBtn = this.FindControl<Button>("KillButton");
+            if (killBtn != null) killBtn.Content = Loc.T("player.kill", "KILL");
+
+            var kickBtn = this.FindControl<Button>("KickButton");
+            if (kickBtn != null) kickBtn.Content = Loc.T("player.kick", "KICK");
+
+            var moveLabel = this.FindControl<TextBlock>("MoveToTeamLabel");
+            if (moveLabel != null) moveLabel.Text = Loc.T("player.move", "MOVE TO TEAM");
+
+            var banLabel = this.FindControl<TextBlock>("BanLabel");
+            if (banLabel != null) banLabel.Text = Loc.T("player.ban", "BAN");
+
+            var banPlayerBtn = this.FindControl<Button>("BanPlayerButton");
+            if (banPlayerBtn != null) banPlayerBtn.Content = Loc.T("player.ban.button", "BAN PLAYER");
         }
 
         public void SetClient(PRoConClient client)
