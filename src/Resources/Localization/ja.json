@@ -1317,6 +1317,12 @@
     "punkbuster.command.watermark": "pb_sv_command (e.g. pb_sv_plist)",
     "punkbuster.command.send": "Send",
     "dialog.remove.button": "Remove",
-    "plugins.output.copied": "Copied!"
+    "plugins.output.copied": "Copied!",
+    "banlist.clearall": "すべてクリア",
+    "banlist.duration": "期間:",
+    "banlist.id": "ID:",
+    "banlist.type": "タイプ:",
+    "player.actions": "アクション",
+    "player.ban.button": "プレイヤーをBAN"
   }
 }

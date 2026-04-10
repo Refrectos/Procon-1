@@ -1317,6 +1317,12 @@
     "punkbuster.command.watermark": "pb_sv_command (e.g. pb_sv_plist)",
     "punkbuster.command.send": "Send",
     "dialog.remove.button": "Remove",
-    "plugins.output.copied": "Copied!"
+    "plugins.output.copied": "Copied!",
+    "banlist.clearall": "全部清除",
+    "banlist.duration": "时长:",
+    "banlist.id": "ID:",
+    "banlist.type": "类型:",
+    "player.actions": "操作",
+    "player.ban.button": "封禁玩家"
   }
 }

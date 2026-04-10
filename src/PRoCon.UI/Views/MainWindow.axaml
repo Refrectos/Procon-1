@@ -347,6 +347,14 @@
                               VerticalContentAlignment="Center"
                               Tag="{Binding}"
                               Click="OnSidebarServerClick">
+                        <ToolTip.Tip>
+                          <StackPanel MaxWidth="250">
+                            <TextBlock Text="{Binding TooltipLine1}" FontWeight="SemiBold" FontSize="12"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" />
+                            <TextBlock Text="{Binding TooltipLine2}" FontSize="11"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+                          </StackPanel>
+                        </ToolTip.Tip>
                         <Button.ContextMenu>
                           <ContextMenu>
                             <MenuItem Header="Connect" Click="OnContextConnect" />

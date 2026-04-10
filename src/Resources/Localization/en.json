@@ -1317,6 +1317,12 @@
     "punkbuster.title": "PunkBuster",
     "punkbuster.command.header": "Send PunkBuster Command",
     "punkbuster.command.watermark": "pb_sv_command (e.g. pb_sv_plist)",
-    "punkbuster.command.send": "Send"
+    "punkbuster.command.send": "Send",
+    "banlist.clearall": "Clear All",
+    "banlist.duration": "Duration:",
+    "banlist.id": "ID:",
+    "banlist.type": "Type:",
+    "player.actions": "Actions",
+    "player.ban.button": "Ban Player"
   }
 }

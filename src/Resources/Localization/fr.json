@@ -1317,6 +1317,12 @@
     "punkbuster.command.watermark": "pb_sv_command (ex. pb_sv_plist)",
     "punkbuster.command.send": "Envoyer",
     "dialog.remove.button": "Remove",
-    "plugins.output.copied": "Copied!"
+    "plugins.output.copied": "Copied!",
+    "banlist.clearall": "Tout effacer",
+    "banlist.duration": "Durée:",
+    "banlist.id": "ID:",
+    "banlist.type": "Type:",
+    "player.actions": "Actions",
+    "player.ban.button": "Bannir le joueur"
   }
 }

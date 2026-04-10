@@ -14,7 +14,7 @@ namespace PRoCon.UI.Services
     /// </summary>
     public static class Loc
     {
-        private static Dictionary<string, string> _strings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private static volatile Dictionary<string, string> _strings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         private static readonly Dictionary<string, LanguageInfo> _languages = new Dictionary<string, LanguageInfo>(StringComparer.OrdinalIgnoreCase);
         private static string _currentLanguageCode = "au";
 
@@ -57,7 +57,10 @@ namespace PRoCon.UI.Services
                         };
                     }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Localization: failed to load {resourceName}: {ex.Message}");
+                }
             }
 
             // Load default language
@@ -90,7 +93,10 @@ namespace PRoCon.UI.Services
                     }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Localization: failed to switch to '{code}': {ex.Message}");
+            }
         }
 
         /// <summary>
