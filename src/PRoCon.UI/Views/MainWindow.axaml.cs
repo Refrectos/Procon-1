@@ -416,9 +416,11 @@ namespace PRoCon.UI.Views
                     if (client.CurrentServerInfo?.ServerName != null)
                         entry.ServerName = client.CurrentServerInfo.ServerName;
 
-                    // Set game type and player counts from the game client if available
-                    if (client.Game != null)
-                        entry.GameType = client.Game.GameType ?? "";
+                    // Set game type from live client or cached value
+                    if (client.Game != null && !string.IsNullOrEmpty(client.Game.GameType))
+                        entry.GameType = client.Game.GameType;
+                    else if (!string.IsNullOrEmpty(client.CachedGameType))
+                        entry.GameType = client.CachedGameType;
                     if (client.CurrentServerInfo != null)
                     {
                         entry.PlayerCount = client.CurrentServerInfo.PlayerCount;
@@ -1066,6 +1068,14 @@ namespace PRoCon.UI.Views
                 entry.ServerName = name;
                 entry.GameType = sender.GameType ?? "";
                 entry.State = ServerConnectionState.Connected;
+
+                // Cache game type for offline .def loading on next startup
+                var client = GetClient(entry.HostPort);
+                if (client != null && !string.IsNullOrEmpty(sender.GameType))
+                {
+                    client.CachedGameType = sender.GameType;
+                    _application.SaveMainConfig();
+                }
                 entry.LastServerInfo = info;
                 entry.PlayerCount = info.PlayerCount;
                 entry.MaxPlayerCount = info.MaxPlayerCount;
@@ -1639,7 +1649,19 @@ namespace PRoCon.UI.Views
         private async void OnRemoveServer(object sender, RoutedEventArgs e)
         {
             if (_selectedServer == null) return;
+            await RemoveServerEntry(_selectedServer);
+        }
 
+        private async void OnContextRemoveServer(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem mi && mi.DataContext is ServerEntry entry)
+            {
+                await RemoveServerEntry(entry);
+            }
+        }
+
+        private async System.Threading.Tasks.Task RemoveServerEntry(ServerEntry entry)
+        {
             // Confirmation dialog
             var dialog = new Avalonia.Controls.Window
             {
@@ -1651,7 +1673,7 @@ namespace PRoCon.UI.Views
             };
             bool confirmed = false;
             var panel = new StackPanel { Margin = new Avalonia.Thickness(20), Spacing = 16 };
-            panel.Children.Add(new TextBlock { Text = $"Remove server {_selectedServer.DisplayLabel}?", TextWrapping = Avalonia.Media.TextWrapping.Wrap });
+            panel.Children.Add(new TextBlock { Text = $"Remove server {entry.DisplayLabel}?", TextWrapping = Avalonia.Media.TextWrapping.Wrap });
             var btnPanel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 8, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right };
             var cancelBtn = new Button { Content = "Cancel", Padding = new Avalonia.Thickness(16, 6) };
             cancelBtn.Click += (s, a) => dialog.Close();
@@ -1665,7 +1687,6 @@ namespace PRoCon.UI.Views
             await dialog.ShowDialog(this);
             if (!confirmed) return;
 
-            var entry = _selectedServer;
             var client = GetClient(entry.HostPort);
 
             if (client != null)
@@ -1689,21 +1710,23 @@ namespace PRoCon.UI.Views
             entry.ConsoleLogger = null;
             _servers.Remove(entry);
             _serverLookup.Remove(entry.HostPort);
-            _selectedServer = null;
 
-            UpdateStatus("TextSecondaryBrush", "Server removed");
-            ShowConnectButton(false);
-            ShowDisconnectButton(false);
-            ShowRemoveButton(false);
-            ShowEditButton(false);
+            // If the removed server was currently selected, clear the view
+            if (_selectedServer == entry)
+            {
+                _selectedServer = null;
+                UpdateStatus("TextSecondaryBrush", "Server removed");
+                ShowConnectButton(false);
+                ShowDisconnectButton(false);
+                ShowRemoveButton(false);
+                ShowEditButton(false);
+                ClearServerContext();
+                UpdateContentVisibility();
+                if (_serverList != null) _serverList.SelectedItem = null;
+            }
+
             UpdateConnectionCount();
             _application.SaveMainConfig();
-
-            // Go back to home — clear context and show landing page
-            ClearServerContext();
-            UpdateContentVisibility();
-
-            if (_serverList != null) _serverList.SelectedItem = null;
         }
 
         // --- Load Server View (switch main panel to selected server's data) ---

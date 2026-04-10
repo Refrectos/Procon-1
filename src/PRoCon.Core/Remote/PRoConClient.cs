@@ -359,6 +359,12 @@ namespace PRoCon.Core.Remote
         }
         private string _connectionServerName = String.Empty;
 
+        /// <summary>
+        /// Game type cached from previous connection (e.g., "BF4", "BF3").
+        /// Used to load .def map data before the server connection is established.
+        /// </summary>
+        public string CachedGameType { get; set; } = String.Empty;
+
         public string Username
         {
             get { return _username; }

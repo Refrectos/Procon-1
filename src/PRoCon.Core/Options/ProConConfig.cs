@@ -174,6 +174,9 @@ namespace PRoCon.Core.Options
 
         [JsonProperty("autoConnect")]
         public bool AutoConnect { get; set; }
+
+        [JsonProperty("gameType")]
+        public string GameType { get; set; } = "";
     }
 
     public class AccountConfig

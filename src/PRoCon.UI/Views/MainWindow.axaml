@@ -219,6 +219,11 @@
                         BorderBrush="{DynamicResource GlassBorderBrush}"
                         BorderThickness="1,1,1,0"
                         Background="Transparent">
+                  <Border.ContextMenu>
+                    <ContextMenu>
+                      <MenuItem Header="Remove Server" Click="OnContextRemoveServer" />
+                    </ContextMenu>
+                  </Border.ContextMenu>
                   <StackPanel Orientation="Horizontal" Spacing="5">
                     <Panel Width="10" Height="10" VerticalAlignment="Center">
                       <Ellipse Width="6" Height="6"

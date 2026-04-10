@@ -1059,6 +1059,8 @@ namespace PRoCon.Core
                     {
                         if (!string.IsNullOrEmpty(srv.Name))
                             connection.ConnectionServerName = srv.Name;
+                        if (!string.IsNullOrEmpty(srv.GameType))
+                            connection.CachedGameType = srv.GameType;
                         if (srv.AutoConnect)
                             connection.AutomaticallyConnect = true;
                     }
@@ -1149,6 +1151,11 @@ namespace PRoCon.Core
                         srv.Name = prcClient.CurrentServerInfo.ServerName;
                     else if (!string.IsNullOrEmpty(prcClient.ConnectionServerName))
                         srv.Name = prcClient.ConnectionServerName;
+
+                    if (prcClient.Game != null && !string.IsNullOrEmpty(prcClient.Game.GameType))
+                        srv.GameType = prcClient.Game.GameType;
+                    else if (!string.IsNullOrEmpty(prcClient.CachedGameType))
+                        srv.GameType = prcClient.CachedGameType;
 
                     config.Servers.Add(srv);
                 }

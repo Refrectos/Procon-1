@@ -4,99 +4,25 @@ using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using PRoCon.Core;
 using PRoCon.Core.Maps;
 using PRoCon.Core.Remote;
 
 namespace PRoCon.UI.Views
 {
+    /// <summary>
+    /// Provides display-name lookups for map and mode engine IDs.
+    /// Populated dynamically from the server's MapListPool at connection time.
+    /// </summary>
     public static class GameData
     {
-        private static readonly Dictionary<string, string> MapNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-        {
-            // BF4 Maps
-            { "MP_Abandoned", "Zavod 311" },
-            { "MP_Damage", "Lancang Dam" },
-            { "MP_Flooded", "Flood Zone" },
-            { "MP_Journey", "Golmud Railway" },
-            { "MP_Naval", "Paracel Storm" },
-            { "MP_Prison", "Operation Locker" },
-            { "MP_Resort", "Hainan Resort" },
-            { "MP_Siege", "Siege of Shanghai" },
-            { "MP_TheDish", "Rogue Transmission" },
-            { "MP_Tremors", "Dawnbreaker" },
-            { "XP1_001", "Silk Road" },
-            { "XP1_002", "Altai Range" },
-            { "XP1_003", "Guilin Peaks" },
-            { "XP1_004", "Dragon Pass" },
-            { "XP0_Caspian", "Caspian Border 2014" },
-            { "XP0_Firestorm", "Firestorm 2014" },
-            { "XP0_Metro", "Operation Metro 2014" },
-            { "XP0_Oman", "Gulf of Oman 2014" },
-            { "XP2_001", "Lost Islands" },
-            { "XP2_002", "Nansha Strike" },
-            { "XP2_003", "Wave Breaker" },
-            { "XP2_004", "Operation Mortar" },
-            { "XP3_MarketPl", "Pearl Market" },
-            { "XP3_Prpganda", "Propaganda" },
-            { "XP3_UrbanGdn", "Lumpini Garden" },
-            { "XP3_WtrFront", "Sunken Dragon" },
-            { "XP4_Arctic", "Operation Whiteout" },
-            { "XP4_SubBase", "Hammerhead" },
-            { "XP4_Titan", "Hangar 21" },
-            { "XP4_WalkerFactory", "Giants of Karelia" },
-            { "XP5_Night_01", "Zavod: Graveyard Shift" },
-            { "XP7_Valley", "Dragon Valley 2015" },
-            // BF3 Maps
-            { "MP_001", "Grand Bazaar" },
-            { "MP_003", "Teheran Highway" },
-            { "MP_007", "Caspian Border" },
-            { "MP_011", "Seine Crossing" },
-            { "MP_012", "Operation Firestorm" },
-            { "MP_013", "Damavand Peak" },
-            { "MP_017", "Noshahr Canals" },
-            { "MP_018", "Kharg Island" },
-            { "MP_Subway", "Operation Metro" },
-            // BFH Maps
-            { "mp_bank", "Bank Job" },
-            { "mp_bloodout", "The Block" },
-            { "mp_desert05", "Dust Bowl" },
-            { "mp_downtown", "Downtown" },
-            { "mp_eastside", "Derailed" },
-            { "mp_glades", "Everglades" },
-            { "mp_growhouse", "Growhouse" },
-            { "mp_hills", "Hollywood Heights" },
-            { "mp_offshore", "Riptide" },
-        };
+        private static readonly object _lock = new object();
 
-        private static readonly Dictionary<string, string> ModeNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-        {
-            { "ConquestLarge0", "Conquest Large" },
-            { "ConquestSmall0", "Conquest Small" },
-            { "Domination0", "Domination" },
-            { "Elimination0", "Defuse" },
-            { "Obliteration", "Obliteration" },
-            { "RushLarge0", "Rush" },
-            { "SquadDeathMatch0", "Squad Deathmatch" },
-            { "TeamDeathMatch0", "Team Deathmatch" },
-            { "AirSuperiority0", "Air Superiority" },
-            { "CaptureTheflag0", "Capture the Flag" },
-            { "CarrierAssaultSmall0", "Carrier Assault Small" },
-            { "CarrierAssaultLarge0", "Carrier Assault Large" },
-            { "SquadObliteration0", "Squad Obliteration" },
-            { "GunMaster0", "Gun Master" },
-            { "GunMaster1", "Gun Master" },
-            { "SquadRush0", "Squad Rush" },
-            { "TurfWarLarge0", "Conquest Large" },
-            { "TurfWarSmall0", "Conquest Small" },
-            { "Heist0", "Heist" },
-            { "Hotwire0", "Hotwire" },
-            { "Bloodmoney0", "Blood Money" },
-            { "Hit0", "Crosshair" },
-            { "Hostage0", "Rescue" },
-            { "CashGrab0", "Bounty Hunter" },
-            { "SquadHeist0", "Squad Heist" },
-            { "Chainlink0", "Chain Link" },
-        };
+        private static readonly Dictionary<string, string> MapNames =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        private static readonly Dictionary<string, string> ModeNames =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         public static string GetMapName(string engineName)
         {
@@ -109,211 +35,37 @@ namespace PRoCon.UI.Views
             if (string.IsNullOrEmpty(engineName)) return engineName;
             return ModeNames.TryGetValue(engineName, out var name) ? name : engineName;
         }
-    }
 
-    /// <summary>
-    /// Provides the available map pool organized by expansion pack for each supported game.
-    /// Each map entry includes supported game modes.
-    /// </summary>
-    public static class MapPool
-    {
-        public class MapInfo
+        /// <summary>
+        /// Register a map display name from MapListPool data.
+        /// Only adds if the key doesn't already exist.
+        /// </summary>
+        public static void RegisterMapName(string engineName, string displayName)
         {
-            public string FileName { get; set; }
-            public string DisplayName { get; set; }
-            public string[] SupportedModes { get; set; }
-        }
-
-        public class MapGroup
-        {
-            public string GroupName { get; set; }
-            public List<MapInfo> Maps { get; set; }
-        }
-
-        private static readonly string[] BF4StandardModes = {
-            "ConquestLarge0", "ConquestSmall0", "Domination0", "Elimination0",
-            "Obliteration", "RushLarge0", "SquadDeathMatch0", "TeamDeathMatch0"
-        };
-
-        private static readonly string[] BF4DlcModes = {
-            "ConquestLarge0", "ConquestSmall0", "Domination0", "Elimination0",
-            "Obliteration", "RushLarge0", "SquadDeathMatch0", "TeamDeathMatch0",
-            "AirSuperiority0", "CaptureTheflag0", "CarrierAssaultSmall0",
-            "CarrierAssaultLarge0", "Chainlink0"
-        };
-
-        private static readonly string[] BF3Modes = {
-            "ConquestLarge0", "ConquestSmall0", "RushLarge0",
-            "SquadDeathMatch0", "TeamDeathMatch0", "SquadRush0"
-        };
-
-        private static readonly string[] BFHModes = {
-            "TurfWarLarge0", "TurfWarSmall0", "Heist0", "Hotwire0",
-            "Bloodmoney0", "Hit0", "Hostage0", "TeamDeathMatch0"
-        };
-
-        public static List<MapGroup> GetMapGroups(string gameType)
-        {
-            if (string.Equals(gameType, "BF4", StringComparison.OrdinalIgnoreCase))
-                return GetBF4Maps();
-            if (string.Equals(gameType, "BF3", StringComparison.OrdinalIgnoreCase))
-                return GetBF3Maps();
-            if (string.Equals(gameType, "BFHL", StringComparison.OrdinalIgnoreCase))
-                return GetBFHMaps();
-
-            // Default: return BF4 maps as fallback
-            return GetBF4Maps();
-        }
-
-        private static MapInfo MakeMap(string fileName, string[] modes)
-        {
-            return new MapInfo
+            if (!string.IsNullOrEmpty(engineName) && !string.IsNullOrEmpty(displayName))
             {
-                FileName = fileName,
-                DisplayName = GameData.GetMapName(fileName),
-                SupportedModes = modes
-            };
+                lock (_lock)
+                {
+                    if (!MapNames.ContainsKey(engineName))
+                        MapNames[engineName] = displayName;
+                }
+            }
         }
 
-        private static List<MapGroup> GetBF4Maps()
+        /// <summary>
+        /// Register a mode display name from MapListPool data.
+        /// Only adds if the key doesn't already exist.
+        /// </summary>
+        public static void RegisterModeName(string engineName, string displayName)
         {
-            return new List<MapGroup>
+            if (!string.IsNullOrEmpty(engineName) && !string.IsNullOrEmpty(displayName))
             {
-                new MapGroup
+                lock (_lock)
                 {
-                    GroupName = "Base Maps",
-                    Maps = new List<MapInfo>
-                    {
-                        MakeMap("MP_Abandoned", BF4StandardModes),
-                        MakeMap("MP_Damage", BF4StandardModes),
-                        MakeMap("MP_Flooded", BF4StandardModes),
-                        MakeMap("MP_Journey", BF4StandardModes),
-                        MakeMap("MP_Naval", BF4StandardModes),
-                        MakeMap("MP_Prison", BF4StandardModes),
-                        MakeMap("MP_Resort", BF4StandardModes),
-                        MakeMap("MP_Siege", BF4StandardModes),
-                        MakeMap("MP_TheDish", BF4StandardModes),
-                        MakeMap("MP_Tremors", BF4StandardModes),
-                    }
-                },
-                new MapGroup
-                {
-                    GroupName = "China Rising (XP1)",
-                    Maps = new List<MapInfo>
-                    {
-                        MakeMap("XP1_001", BF4DlcModes),
-                        MakeMap("XP1_002", BF4DlcModes),
-                        MakeMap("XP1_003", BF4DlcModes),
-                        MakeMap("XP1_004", BF4DlcModes),
-                    }
-                },
-                new MapGroup
-                {
-                    GroupName = "Second Assault (XP0)",
-                    Maps = new List<MapInfo>
-                    {
-                        MakeMap("XP0_Caspian", BF4DlcModes),
-                        MakeMap("XP0_Firestorm", BF4DlcModes),
-                        MakeMap("XP0_Metro", BF4DlcModes),
-                        MakeMap("XP0_Oman", BF4DlcModes),
-                    }
-                },
-                new MapGroup
-                {
-                    GroupName = "Naval Strike (XP2)",
-                    Maps = new List<MapInfo>
-                    {
-                        MakeMap("XP2_001", BF4DlcModes),
-                        MakeMap("XP2_002", BF4DlcModes),
-                        MakeMap("XP2_003", BF4DlcModes),
-                        MakeMap("XP2_004", BF4DlcModes),
-                    }
-                },
-                new MapGroup
-                {
-                    GroupName = "Dragon's Teeth (XP3)",
-                    Maps = new List<MapInfo>
-                    {
-                        MakeMap("XP3_MarketPl", BF4DlcModes),
-                        MakeMap("XP3_Prpganda", BF4DlcModes),
-                        MakeMap("XP3_UrbanGdn", BF4DlcModes),
-                        MakeMap("XP3_WtrFront", BF4DlcModes),
-                    }
-                },
-                new MapGroup
-                {
-                    GroupName = "Final Stand (XP4)",
-                    Maps = new List<MapInfo>
-                    {
-                        MakeMap("XP4_Arctic", BF4DlcModes),
-                        MakeMap("XP4_SubBase", BF4DlcModes),
-                        MakeMap("XP4_Titan", BF4DlcModes),
-                        MakeMap("XP4_WalkerFactory", BF4DlcModes),
-                    }
-                },
-                new MapGroup
-                {
-                    GroupName = "Night Ops (XP5)",
-                    Maps = new List<MapInfo>
-                    {
-                        MakeMap("XP5_Night_01", BF4StandardModes),
-                    }
-                },
-                new MapGroup
-                {
-                    GroupName = "Legacy (XP7)",
-                    Maps = new List<MapInfo>
-                    {
-                        MakeMap("XP7_Valley", BF4DlcModes),
-                    }
-                },
-            };
-        }
-
-        private static List<MapGroup> GetBF3Maps()
-        {
-            return new List<MapGroup>
-            {
-                new MapGroup
-                {
-                    GroupName = "Base Maps",
-                    Maps = new List<MapInfo>
-                    {
-                        MakeMap("MP_001", BF3Modes),
-                        MakeMap("MP_003", BF3Modes),
-                        MakeMap("MP_007", BF3Modes),
-                        MakeMap("MP_011", BF3Modes),
-                        MakeMap("MP_012", BF3Modes),
-                        MakeMap("MP_013", BF3Modes),
-                        MakeMap("MP_017", BF3Modes),
-                        MakeMap("MP_018", BF3Modes),
-                        MakeMap("MP_Subway", BF3Modes),
-                    }
-                },
-            };
-        }
-
-        private static List<MapGroup> GetBFHMaps()
-        {
-            return new List<MapGroup>
-            {
-                new MapGroup
-                {
-                    GroupName = "Base Maps",
-                    Maps = new List<MapInfo>
-                    {
-                        MakeMap("mp_bank", BFHModes),
-                        MakeMap("mp_bloodout", BFHModes),
-                        MakeMap("mp_desert05", BFHModes),
-                        MakeMap("mp_downtown", BFHModes),
-                        MakeMap("mp_eastside", BFHModes),
-                        MakeMap("mp_glades", BFHModes),
-                        MakeMap("mp_growhouse", BFHModes),
-                        MakeMap("mp_hills", BFHModes),
-                        MakeMap("mp_offshore", BFHModes),
-                    }
-                },
-            };
+                    if (!ModeNames.ContainsKey(engineName))
+                        ModeNames[engineName] = displayName;
+                }
+            }
         }
     }
 
@@ -321,8 +73,62 @@ namespace PRoCon.UI.Views
     {
         private PRoConClient _client;
         private readonly List<MaplistEntry> _mapList = new List<MaplistEntry>();
-        private MapPool.MapInfo _selectedMapInfo;
-        private bool _pendingRefresh;
+        private string _selectedMapFileName;
+        private List<(string modeId, string modeDisplayName)> _selectedMapModes;
+
+        private bool _mapPoolRefreshPending;
+
+        // Expansion pack prefix → friendly group name, per game type
+        private static readonly Dictionary<string, List<(string prefix, string groupName)>> ExpansionGroups =
+            new Dictionary<string, List<(string, string)>>(StringComparer.OrdinalIgnoreCase)
+            {
+                {
+                    "BF4", new List<(string, string)>
+                    {
+                        ("XP0_", "Second Assault"),
+                        ("XP1_", "China Rising"),
+                        ("XP2_", "Naval Strike"),
+                        ("XP3_", "Dragon's Teeth"),
+                        ("XP4_", "Final Stand"),
+                        ("XP5_", "Night Operations"),
+                        ("XP6_", "Community Operations"),
+                        ("XP7_", "Legacy Operations"),
+                        ("MP_", "Base Maps"),
+                    }
+                },
+                {
+                    "BF3", new List<(string, string)>
+                    {
+                        ("XP1_", "Back to Karkand"),
+                        ("XP2_", "Close Quarters"),
+                        ("XP3_", "Armored Kill"),
+                        ("XP4_", "Aftermath"),
+                        ("XP5_", "End Game"),
+                        ("MP_", "Base Maps"),
+                    }
+                },
+                {
+                    // xp25_ must come before xp2_ so "xp25_bank" doesn't match "xp2_" prefix
+                    "BFHL", new List<(string, string)>
+                    {
+                        ("XP1_", "Criminal Activity"),
+                        ("xp25_", "Night Maps"),
+                        ("xp2_", "Robbery"),
+                        ("xp3_", "Getaway"),
+                        ("xp4_", "Betrayal"),
+                        ("MP_", "Base Maps"),
+                    }
+                },
+                {
+                    "BFBC2", new List<(string, string)>
+                    {
+                        ("levels/nam_", "Vietnam"),
+                        ("levels/bc1_", "Classics"),
+                        ("levels/mp_sp_", "Bonus Maps"),
+                        ("levels/mp_", "Base Maps"),
+                    }
+                },
+            };
 
         public MapListPanel()
         {
@@ -339,7 +145,10 @@ namespace PRoCon.UI.Views
                 _client.Game.MapListMapInserted -= OnMapListMapInserted;
                 _client.Game.MapListMapRemoved -= OnMapListMapRemoved;
                 _client.Game.MapListCleared -= OnMapListCleared;
-                _client.Game.MapListSave -= OnMapListSaved;
+            }
+            if (_client != null)
+            {
+                _client.MapListPool.ItemAdded -= OnMapPoolItemAdded;
             }
 
             _client = client;
@@ -351,7 +160,17 @@ namespace PRoCon.UI.Views
                 _client.Game.MapListMapInserted += OnMapListMapInserted;
                 _client.Game.MapListMapRemoved += OnMapListMapRemoved;
                 _client.Game.MapListCleared += OnMapListCleared;
-                _client.Game.MapListSave += OnMapListSaved;
+
+                // Listen for MapListPool population from .def file loading
+                _client.MapListPool.ItemAdded += OnMapPoolItemAdded;
+
+                // Populate GameData from the server's map pool so display names
+                // are always complete for whatever game/DLC is connected.
+                foreach (var map in _client.MapListPool)
+                {
+                    GameData.RegisterMapName(map.FileName, map.PublicLevelName);
+                    GameData.RegisterModeName(map.PlayList, map.GameMode);
+                }
 
                 PopulateAvailableMaps();
             }
@@ -365,36 +184,217 @@ namespace PRoCon.UI.Views
             }
         }
 
-        private void OnMapListSaved(FrostbiteClient sender)
+        /// <summary>
+        /// Called when MapListPool receives entries from .def file loading.
+        /// Debounces to avoid rebuilding the tree for every single CMap entry.
+        /// </summary>
+        private void OnMapPoolItemAdded(int index, CMap item)
         {
-            // Server confirmed save — now re-list
-            if (_pendingRefresh && _client?.Game != null)
+            GameData.RegisterMapName(item.FileName, item.PublicLevelName);
+            GameData.RegisterModeName(item.PlayList, item.GameMode);
+
+            if (_mapPoolRefreshPending) return;
+            _mapPoolRefreshPending = true;
+
+            Dispatcher.UIThread.Post(() =>
             {
-                _pendingRefresh = false;
-                _client.Game.SendMapListListRoundsPacket();
-            }
+                _mapPoolRefreshPending = false;
+                PopulateAvailableMaps();
+            }, DispatcherPriority.Background);
         }
 
+        /// <summary>
+        /// Parses map entries from a .def file (embedded resource or on-disk fallback).
+        /// </summary>
+        private static List<CMap> LoadMapsFromDefFile(string gameType)
+        {
+            var maps = new List<CMap>();
+            string defFileName = gameType + ".def";
+            string[] lines = null;
+
+            // Try embedded resource first (PRoCon.Core.Resources.Configs.{gameType}.def)
+            var assembly = typeof(CMap).Assembly;
+            string resourceName = $"PRoCon.Core.Resources.Configs.{defFileName}";
+            using (var stream = assembly.GetManifestResourceStream(resourceName))
+            {
+                if (stream != null)
+                {
+                    using (var reader = new System.IO.StreamReader(stream))
+                    {
+                        lines = reader.ReadToEnd().Split('\n');
+                    }
+                }
+            }
+
+            // Fallback to on-disk file
+            if (lines == null)
+            {
+                string defPath = System.IO.Path.Combine(ProConPaths.ConfigsDirectory, defFileName);
+                if (System.IO.File.Exists(defPath))
+                    lines = System.IO.File.ReadAllLines(defPath);
+            }
+
+            if (lines == null) return maps;
+
+            foreach (string line in lines)
+            {
+                string trimmed = line.Trim();
+                if (!trimmed.StartsWith("procon.protected.maps.add", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                // Parse: procon.protected.maps.add "PlayList" "FileName" "GameMode" "PublicLevelName" DefaultSquadID
+                var parts = new List<string>();
+                int i = trimmed.IndexOf('"');
+                while (i >= 0 && i < trimmed.Length)
+                {
+                    int end = trimmed.IndexOf('"', i + 1);
+                    if (end < 0) break;
+                    parts.Add(trimmed.Substring(i + 1, end - i - 1));
+                    i = trimmed.IndexOf('"', end + 1);
+                }
+
+                if (parts.Count >= 4)
+                {
+                    int squadId = 0;
+                    // Try to parse the trailing number after the last quote
+                    string remainder = trimmed.Substring(trimmed.LastIndexOf('"') + 1).Trim();
+                    int.TryParse(remainder, out squadId);
+                    maps.Add(new CMap(parts[0], parts[1], parts[2], parts[3], squadId));
+                }
+            }
+
+            return maps;
+        }
+
+        /// <summary>
+        /// Builds the Available Maps tree from MapListPool, grouped by expansion pack.
+        /// Falls back to parsing the .def file directly if MapListPool is empty.
+        /// </summary>
         private void PopulateAvailableMaps()
         {
-            string gameType = _client?.Game?.GameType ?? "BF4";
-            var groups = MapPool.GetMapGroups(gameType);
+            // Determine the map source: live MapListPool or cached .def file
+            IEnumerable<CMap> mapSource = null;
+            string gameType = _client?.Game?.GameType ?? "";
 
+            if (_client?.MapListPool != null && _client.MapListPool.Count > 0)
+            {
+                mapSource = _client.MapListPool;
+            }
+            else
+            {
+                // Try cached game type to load .def file directly
+                if (string.IsNullOrEmpty(gameType) && _client != null)
+                    gameType = _client.CachedGameType ?? "";
+
+                if (!string.IsNullOrEmpty(gameType))
+                {
+                    var defMaps = LoadMapsFromDefFile(gameType);
+                    if (defMaps.Count > 0)
+                        mapSource = defMaps;
+                }
+            }
+
+            if (mapSource == null)
+            {
+                AvailableMapsTree.ItemsSource = new List<TreeViewItem>
+                {
+                    new TreeViewItem { Header = "No maps available (not connected)" }
+                };
+                return;
+            }
+
+            // Use gameType determined above (from Game, CachedGameType, or .def fallback)
+            if (string.IsNullOrEmpty(gameType) && _client != null)
+                gameType = _client.CachedGameType ?? "";
+
+            // Group CMap entries by FileName, collecting modes per map
+            var mapsByFile = new Dictionary<string, (string displayName, List<(string modeId, string modeDisplay)> modes)>(
+                StringComparer.OrdinalIgnoreCase);
+
+            foreach (var cmap in mapSource)
+            {
+                if (string.IsNullOrEmpty(cmap.FileName)) continue;
+
+                // Register display names for rotation list lookups
+                GameData.RegisterMapName(cmap.FileName, cmap.PublicLevelName);
+                GameData.RegisterModeName(cmap.PlayList, cmap.GameMode);
+
+                if (!mapsByFile.TryGetValue(cmap.FileName, out var entry))
+                {
+                    entry = (cmap.PublicLevelName ?? cmap.FileName, new List<(string, string)>());
+                    mapsByFile[cmap.FileName] = entry;
+                }
+
+                // Avoid duplicate modes for the same map
+                string modeId = cmap.PlayList ?? "";
+                if (!string.IsNullOrEmpty(modeId) && !entry.modes.Any(m => string.Equals(m.modeId, modeId, StringComparison.OrdinalIgnoreCase)))
+                {
+                    entry.modes.Add((modeId, cmap.GameMode ?? modeId));
+                }
+            }
+
+            // Get expansion group definitions for this game type
+            var groups = ExpansionGroups.TryGetValue(gameType, out var g) ? g : null;
+
+            // Build grouped structure: group name → list of (fileName, displayName, modes)
+            var grouped = new List<(string groupName, List<(string fileName, string displayName, List<(string modeId, string modeDisplay)> modes)> maps)>();
+            var assigned = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            if (groups != null)
+            {
+                foreach (var (prefix, groupName) in groups)
+                {
+                    var mapsInGroup = mapsByFile
+                        .Where(kvp => kvp.Key.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) && !assigned.Contains(kvp.Key))
+                        .OrderBy(kvp => kvp.Key, StringComparer.OrdinalIgnoreCase)
+                        .Select(kvp => (kvp.Key, kvp.Value.displayName, kvp.Value.modes))
+                        .ToList();
+
+                    if (mapsInGroup.Count > 0)
+                    {
+                        grouped.Add((groupName, mapsInGroup));
+                        foreach (var m in mapsInGroup) assigned.Add(m.Key);
+                    }
+                }
+            }
+
+            // Any maps not matched by prefix go into "Other"
+            var unmatched = mapsByFile
+                .Where(kvp => !assigned.Contains(kvp.Key))
+                .OrderBy(kvp => kvp.Key, StringComparer.OrdinalIgnoreCase)
+                .Select(kvp => (kvp.Key, kvp.Value.displayName, kvp.Value.modes))
+                .ToList();
+
+            if (unmatched.Count > 0)
+            {
+                grouped.Add(("Other", unmatched));
+            }
+
+            // Reorder so "Base Maps" is first
+            var baseIdx = grouped.FindIndex(g2 => g2.groupName == "Base Maps");
+            if (baseIdx > 0)
+            {
+                var baseGroup = grouped[baseIdx];
+                grouped.RemoveAt(baseIdx);
+                grouped.Insert(0, baseGroup);
+            }
+
+            // Build TreeView items
             var treeItems = new List<TreeViewItem>();
-            foreach (var group in groups)
+            foreach (var (groupName, maps) in grouped)
             {
                 var groupNode = new TreeViewItem
                 {
-                    Header = group.GroupName,
+                    Header = groupName,
                     IsExpanded = true
                 };
 
-                foreach (var map in group.Maps)
+                foreach (var (fileName, displayName, modes) in maps)
                 {
                     var mapNode = new TreeViewItem
                     {
-                        Header = $"{map.DisplayName}  ({map.FileName})",
-                        Tag = map
+                        Header = $"{displayName}  ({fileName})",
+                        Tag = new MapNodeData { FileName = fileName, DisplayName = displayName, Modes = modes }
                     };
                     groupNode.Items.Add(mapNode);
                 }
@@ -405,16 +405,28 @@ namespace PRoCon.UI.Views
             AvailableMapsTree.ItemsSource = treeItems;
         }
 
+        /// <summary>
+        /// Tag data for map tree nodes.
+        /// </summary>
+        private class MapNodeData
+        {
+            public string FileName { get; set; }
+            public string DisplayName { get; set; }
+            public List<(string modeId, string modeDisplay)> Modes { get; set; }
+        }
+
         private void OnAvailableMapSelected(object sender, SelectionChangedEventArgs e)
         {
-            if (AvailableMapsTree.SelectedItem is TreeViewItem tvi && tvi.Tag is MapPool.MapInfo mapInfo)
+            if (AvailableMapsTree.SelectedItem is TreeViewItem tvi && tvi.Tag is MapNodeData data)
             {
-                _selectedMapInfo = mapInfo;
-                var modeItems = mapInfo.SupportedModes
+                _selectedMapFileName = data.FileName;
+                _selectedMapModes = data.Modes;
+
+                var modeItems = data.Modes
                     .Select(m => new ComboBoxItem
                     {
-                        Content = GameData.GetModeName(m),
-                        Tag = m
+                        Content = m.modeDisplay,
+                        Tag = m.modeId
                     })
                     .ToList();
 
@@ -424,14 +436,15 @@ namespace PRoCon.UI.Views
             }
             else
             {
-                _selectedMapInfo = null;
+                _selectedMapFileName = null;
+                _selectedMapModes = null;
                 ModeCombo.ItemsSource = null;
             }
         }
 
         private void OnAddToRotation(object sender, RoutedEventArgs e)
         {
-            if (_client?.Game == null || _selectedMapInfo == null) return;
+            if (_client?.Game == null || _selectedMapFileName == null) return;
 
             string gamemode = string.Empty;
             if (ModeCombo.SelectedItem is ComboBoxItem cbi && cbi.Tag is string modeTag)
@@ -442,8 +455,7 @@ namespace PRoCon.UI.Views
             int rounds = (int)(RoundsInput.Value ?? 1);
             if (rounds < 1) rounds = 1;
 
-            var entry = new MaplistEntry(gamemode, _selectedMapInfo.FileName, rounds);
-            _pendingRefresh = true;
+            var entry = new MaplistEntry(gamemode, _selectedMapFileName, rounds);
             _client.Game.SendMapListAppendPacket(entry);
             _client.Game.SendMapListSavePacket();
         }
@@ -521,7 +533,6 @@ namespace PRoCon.UI.Views
             int index = MapRotationList.SelectedIndex;
             if (index < 0 || index >= _mapList.Count) return;
 
-            _pendingRefresh = true;
             _client.Game.SendMapListRemovePacket(index);
             _client.Game.SendMapListSavePacket();
 
@@ -537,7 +548,6 @@ namespace PRoCon.UI.Views
             int index = MapRotationList.SelectedIndex;
             if (index <= 0 || index >= _mapList.Count) return;
 
-            _pendingRefresh = true;
             var entry = _mapList[index];
             _client.Game.SendMapListRemovePacket(index);
             var insertEntry = new MaplistEntry(
@@ -562,7 +572,6 @@ namespace PRoCon.UI.Views
             int index = MapRotationList.SelectedIndex;
             if (index < 0 || index >= _mapList.Count - 1) return;
 
-            _pendingRefresh = true;
             var entry = _mapList[index];
             _client.Game.SendMapListRemovePacket(index);
             var insertEntry = new MaplistEntry(

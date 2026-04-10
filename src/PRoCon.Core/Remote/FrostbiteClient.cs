@@ -3473,6 +3473,9 @@ namespace PRoCon.Core.Remote
             }
         }
 
+        private static readonly System.Text.RegularExpressions.Regex MapListCachePattern =
+            new System.Text.RegularExpressions.Regex(@"^mapList\.list", System.Text.RegularExpressions.RegexOptions.Compiled);
+
         protected virtual void DispatchMapListSaveResponse(FrostbiteConnection sender, Packet cpRecievedPacket, Packet cpRequestPacket)
         {
             if (cpRequestPacket.Words.Count >= 1)
@@ -3481,6 +3484,11 @@ namespace PRoCon.Core.Remote
                 {
                     this.MapListSave(this);
                 }
+
+                // Invalidate cached mapList.list responses so the refresh
+                // fetches fresh data from the server instead of stale cache.
+                sender.Cache.Invalidate(MapListCachePattern);
+                SendMapListListRoundsPacket();
             }
         }
 
