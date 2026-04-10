@@ -22,7 +22,7 @@ namespace PRoCon.UI.Views
             ApplyLocalization();
         }
 
-        private void ApplyLocalization()
+        internal void ApplyLocalization()
         {
             var messageReasonLabel = this.FindControl<TextBlock>("MessageReasonLabel");
             if (messageReasonLabel != null) messageReasonLabel.Text = Loc.T("player.reason", "MESSAGE / REASON");

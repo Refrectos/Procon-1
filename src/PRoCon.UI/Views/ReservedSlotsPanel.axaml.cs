@@ -19,7 +19,7 @@ namespace PRoCon.UI.Views
             ApplyLocalization();
         }
 
-        private void ApplyLocalization()
+        internal void ApplyLocalization()
         {
             var title = this.FindControl<TextBlock>("ReservedTitleText");
             if (title != null) title.Text = Loc.T("reserved.title", "Reserved Slots");

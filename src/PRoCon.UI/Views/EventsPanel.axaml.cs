@@ -39,7 +39,7 @@ namespace PRoCon.UI.Views
                 itemsControl.ItemsSource = _filteredEvents;
         }
 
-        private void ApplyLocalization()
+        internal void ApplyLocalization()
         {
             var title = this.FindControl<TextBlock>("EventLogTitle");
             if (title != null) title.Text = Loc.T("events.title", "Event Log");

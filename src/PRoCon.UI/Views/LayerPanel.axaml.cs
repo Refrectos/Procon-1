@@ -30,7 +30,7 @@ namespace PRoCon.UI.Views
             ApplyLocalization();
         }
 
-        private void ApplyLocalization()
+        internal void ApplyLocalization()
         {
             SetText("LayerTitleText", Loc.T("layer.title", "Layer Service"));
             SetText("LayerDescriptionText", Loc.T("layer.description", "The layer allows remote admin connections to manage this server through PRoCon."));

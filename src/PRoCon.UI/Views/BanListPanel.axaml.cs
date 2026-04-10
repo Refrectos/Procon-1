@@ -24,7 +24,7 @@ namespace PRoCon.UI.Views
             ApplyLocalization();
         }
 
-        private void ApplyLocalization()
+        internal void ApplyLocalization()
         {
             var header = this.FindControl<TextBlock>("HeaderText");
             if (header != null) header.Text = Loc.T("banlist.title", "Ban List");

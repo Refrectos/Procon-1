@@ -29,7 +29,7 @@ namespace PRoCon.UI.Views
             _moderationLevelCombo = this.FindControl<ComboBox>("ModerationLevelCombo");
         }
 
-        private void ApplyLocalization()
+        internal void ApplyLocalization()
         {
             var title = this.FindControl<TextBlock>("ChatModTitleText");
             if (title != null) title.Text = Loc.T("chatmod.title", "Text Chat Moderation");

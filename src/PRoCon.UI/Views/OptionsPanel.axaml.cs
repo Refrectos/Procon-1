@@ -32,7 +32,7 @@ namespace PRoCon.UI.Views
             ApplyLocalization();
         }
 
-        private void ApplyLocalization()
+        internal void ApplyLocalization()
         {
             var generalLabel = this.FindControl<TextBlock>("GeneralSectionLabel");
             if (generalLabel != null) generalLabel.Text = Services.Loc.T("options.general", "General");

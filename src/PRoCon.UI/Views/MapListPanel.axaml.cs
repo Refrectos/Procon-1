@@ -136,7 +136,7 @@ namespace PRoCon.UI.Views
             ApplyLocalization();
         }
 
-        private void ApplyLocalization()
+        internal void ApplyLocalization()
         {
             var h = this.FindControl<Avalonia.Controls.TextBlock>("HeaderText");
             if (h != null) h.Text = Services.Loc.T("maplist.title", "Map List");

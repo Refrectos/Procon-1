@@ -19,7 +19,7 @@ namespace PRoCon.UI.Views
             ApplyLocalization();
         }
 
-        private void ApplyLocalization()
+        internal void ApplyLocalization()
         {
             // Server type banner
             SetText2("ServerTypeCaption", Loc.T("serversettings.servertype", "Server Type:"));

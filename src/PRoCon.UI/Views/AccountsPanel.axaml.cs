@@ -42,7 +42,7 @@ namespace PRoCon.UI.Views
                 accountList.ItemsSource = _accounts;
         }
 
-        private void ApplyLocalization()
+        internal void ApplyLocalization()
         {
             SetText("AccountsTitleText", Loc.T("accounts.title", "Accounts"));
             SetText("AddUpdateLabel", Loc.T("accounts.addupdate", "Add / Update"));

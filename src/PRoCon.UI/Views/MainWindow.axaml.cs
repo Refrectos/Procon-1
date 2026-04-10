@@ -2500,45 +2500,18 @@ namespace PRoCon.UI.Views
         private void OnLanguageSwitched()
         {
             ApplyLocalization();
-
-            // Re-apply localization to all child panels that have ApplyLocalization
-            // Panels call their own ApplyLocalization via reflection or direct call
-            _mapListPanel?.GetType().GetMethod("ApplyLocalization",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?
-                .Invoke(_mapListPanel, null);
-            _banListPanel?.GetType().GetMethod("ApplyLocalization",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?
-                .Invoke(_banListPanel, null);
-            _serverSettingsPanel?.GetType().GetMethod("ApplyLocalization",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?
-                .Invoke(_serverSettingsPanel, null);
-            _accountsPanel?.GetType().GetMethod("ApplyLocalization",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?
-                .Invoke(_accountsPanel, null);
-            _eventsPanel?.GetType().GetMethod("ApplyLocalization",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?
-                .Invoke(_eventsPanel, null);
-            _pluginsPanel?.GetType().GetMethod("ApplyLocalization",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?
-                .Invoke(_pluginsPanel, null);
-            _layerPanel?.GetType().GetMethod("ApplyLocalization",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?
-                .Invoke(_layerPanel, null);
-            _playerActionsPanel?.GetType().GetMethod("ApplyLocalization",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?
-                .Invoke(_playerActionsPanel, null);
-            _reservedSlotsPanel?.GetType().GetMethod("ApplyLocalization",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?
-                .Invoke(_reservedSlotsPanel, null);
-            _spectatorListPanel?.GetType().GetMethod("ApplyLocalization",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?
-                .Invoke(_spectatorListPanel, null);
-            _punkBusterPanel?.GetType().GetMethod("ApplyLocalization",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?
-                .Invoke(_punkBusterPanel, null);
-            _textChatModerationPanel?.GetType().GetMethod("ApplyLocalization",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?
-                .Invoke(_textChatModerationPanel, null);
+            _mapListPanel?.ApplyLocalization();
+            _banListPanel?.ApplyLocalization();
+            _serverSettingsPanel?.ApplyLocalization();
+            _accountsPanel?.ApplyLocalization();
+            _eventsPanel?.ApplyLocalization();
+            _pluginsPanel?.ApplyLocalization();
+            _layerPanel?.ApplyLocalization();
+            _playerActionsPanel?.ApplyLocalization();
+            _reservedSlotsPanel?.ApplyLocalization();
+            _spectatorListPanel?.ApplyLocalization();
+            _punkBusterPanel?.ApplyLocalization();
+            _textChatModerationPanel?.ApplyLocalization();
         }
 
         private void ApplyLocalization()

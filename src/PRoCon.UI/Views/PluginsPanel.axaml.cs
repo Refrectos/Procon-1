@@ -180,7 +180,7 @@ namespace PRoCon.UI.Views
             PluginManager.PreCompileOutput += OnPluginOutput;
         }
 
-        private void ApplyLocalization()
+        internal void ApplyLocalization()
         {
             var warningText = this.FindControl<TextBlock>("PluginsWarningText");
             if (warningText != null) warningText.Text = Loc.T("plugins.warning", "Plugins run with full trust on .NET 8. Only install plugins from trusted sources.");
