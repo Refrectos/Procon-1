@@ -1,59 +1,136 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using PRoCon.Core;
-using PRoCon.Core.Localization;
+using System.Reflection;
+using Newtonsoft.Json.Linq;
 
 namespace PRoCon.UI.Services
 {
     /// <summary>
-    /// Static localization accessor for the UI layer.
-    /// Call Loc.Initialize() at startup with the PRoConApplication instance.
-    /// Use Loc.T("key") or Loc.T("key", "default") throughout the UI.
+    /// JSON-based localization for the UI layer.
+    /// Loads language files from embedded resources (*.json in PRoCon.Core.Resources.Localization).
+    /// Call Loc.Initialize() at startup, then use Loc.T("key") throughout the UI.
     /// </summary>
     public static class Loc
     {
-        private static PRoConApplication _app;
+        private static Dictionary<string, string> _strings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private static readonly Dictionary<string, LanguageInfo> _languages = new Dictionary<string, LanguageInfo>(StringComparer.OrdinalIgnoreCase);
+        private static string _currentLanguageCode = "au";
 
-        public static void Initialize(PRoConApplication app)
+        public class LanguageInfo
         {
-            _app = app;
+            public string Code { get; set; }
+            public string DisplayName { get; set; }
+            public string Author { get; set; }
+            public string CountryCode { get; set; }
         }
 
         /// <summary>
-        /// Get a localized string by key. Returns the key itself if not found.
+        /// Initialize localization by loading all available JSON language files from embedded resources.
         /// </summary>
-        public static string T(string key)
+        public static void Initialize()
         {
-            if (_app?.CurrentLanguage == null || string.IsNullOrEmpty(key))
-                return key;
+            var assembly = typeof(PRoCon.Core.CMap).Assembly; // PRoCon.Core assembly
+            string prefix = "PRoCon.Core.Resources.Localization.";
 
-            return _app.CurrentLanguage.GetDefaultLocalized(key, key);
+            foreach (string resourceName in assembly.GetManifestResourceNames())
+            {
+                if (!resourceName.StartsWith(prefix) || !resourceName.EndsWith(".json"))
+                    continue;
+
+                string code = resourceName.Substring(prefix.Length).Replace(".json", "");
+
+                try
+                {
+                    using (var stream = assembly.GetManifestResourceStream(resourceName))
+                    using (var reader = new StreamReader(stream))
+                    {
+                        var json = JObject.Parse(reader.ReadToEnd());
+                        var meta = json["_meta"] as JObject;
+                        _languages[code] = new LanguageInfo
+                        {
+                            Code = code,
+                            DisplayName = meta?["Language"]?.ToString() ?? code,
+                            Author = meta?["author"]?.ToString() ?? "",
+                            CountryCode = meta?["countrycode"]?.ToString() ?? code,
+                        };
+                    }
+                }
+                catch { }
+            }
+
+            // Load default language
+            SetLanguage("au");
         }
 
         /// <summary>
-        /// Get a localized string by key with a fallback default.
+        /// Switch to a different language by code (e.g., "au", "de", "es").
         /// </summary>
-        public static string T(string key, string defaultText)
+        public static void SetLanguage(string code)
         {
-            if (_app?.CurrentLanguage == null || string.IsNullOrEmpty(key))
-                return defaultText;
+            var assembly = typeof(PRoCon.Core.CMap).Assembly;
+            string resourceName = $"PRoCon.Core.Resources.Localization.{code}.json";
 
-            return _app.CurrentLanguage.GetDefaultLocalized(defaultText, key);
+            try
+            {
+                using (var stream = assembly.GetManifestResourceStream(resourceName))
+                {
+                    if (stream == null) return;
+                    using (var reader = new StreamReader(stream))
+                    {
+                        var json = JObject.Parse(reader.ReadToEnd());
+                        var strings = json["strings"] as JObject;
+                        if (strings != null)
+                        {
+                            _strings = strings.Properties()
+                                .ToDictionary(p => p.Name, p => p.Value.ToString(), StringComparer.OrdinalIgnoreCase);
+                            _currentLanguageCode = code;
+                        }
+                    }
+                }
+            }
+            catch { }
+        }
+
+        /// <summary>
+        /// Get all available languages.
+        /// </summary>
+        public static IReadOnlyDictionary<string, LanguageInfo> Languages => _languages;
+
+        /// <summary>
+        /// Current language code.
+        /// </summary>
+        public static string CurrentCode => _currentLanguageCode;
+
+        /// <summary>
+        /// Get a localized string by key. Returns defaultText if not found.
+        /// </summary>
+        public static string T(string key, string defaultText = null)
+        {
+            if (string.IsNullOrEmpty(key))
+                return defaultText ?? key ?? "";
+
+            if (_strings.TryGetValue(key, out var value))
+                return value;
+
+            return defaultText ?? key;
         }
 
         /// <summary>
         /// Get a localized string with format arguments.
         /// </summary>
-        public static string T(string key, string defaultText, params object[] args)
+        public static string TF(string key, string defaultText, params object[] args)
         {
-            if (_app?.CurrentLanguage == null || string.IsNullOrEmpty(key))
-                return string.Format(defaultText, args);
-
-            return _app.CurrentLanguage.GetDefaultLocalized(defaultText, key, args.Select(a => a?.ToString() ?? "").ToArray());
+            string template = T(key, defaultText);
+            try
+            {
+                return string.Format(template, args);
+            }
+            catch
+            {
+                return template;
+            }
         }
-
-        /// <summary>
-        /// Current language code (e.g., "au", "de", "es").
-        /// </summary>
-        public static string CurrentCode => _app?.CurrentLanguage?.FileName?.Replace(".loc", "") ?? "au";
     }
 }

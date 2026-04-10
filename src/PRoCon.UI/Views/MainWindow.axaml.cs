@@ -372,7 +372,13 @@ namespace PRoCon.UI.Views
                 {
                     _application = new PRoConApplication(false, new string[0]);
                     _application.Execute();
-                    PRoCon.UI.Services.Loc.Initialize(_application);
+                    PRoCon.UI.Services.Loc.Initialize();
+                    // Restore saved language preference
+                    if (_application.CurrentLanguage != null)
+                    {
+                        string langCode = _application.CurrentLanguage.FileName?.Replace(".loc", "") ?? "au";
+                        PRoCon.UI.Services.Loc.SetLanguage(langCode);
+                    }
                 }
 
                 // Note: CacheControls() is called at the end of this method.

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Avalonia.Controls;
@@ -65,29 +66,25 @@ namespace PRoCon.UI.Views
             if (apiKeyInput != null && options != null)
                 apiKeyInput.Text = options.ProxyCheckApiKey ?? "";
 
-            // Language dropdown
+            // Language dropdown — populated from JSON localization system
             var langCombo = this.FindControl<ComboBox>("LanguageComboBox");
-            if (langCombo != null && _application.Languages != null)
+            if (langCombo != null)
             {
                 var langItems = new List<ComboBoxItem>();
-                foreach (CLocalization lang in _application.Languages)
+                foreach (var kvp in Services.Loc.Languages.OrderBy(l => l.Value.DisplayName))
                 {
-                    string displayName = lang.GetDefaultLocalized(lang.FileName, "file.Language");
-                    langItems.Add(new ComboBoxItem { Content = displayName, Tag = lang.FileName });
+                    langItems.Add(new ComboBoxItem { Content = kvp.Value.DisplayName, Tag = kvp.Key });
                 }
                 langCombo.ItemsSource = langItems;
 
                 // Select current language
-                var currentLang = _application.CurrentLanguage;
-                if (currentLang != null)
+                string currentCode = Services.Loc.CurrentCode;
+                for (int i = 0; i < langItems.Count; i++)
                 {
-                    for (int i = 0; i < langItems.Count; i++)
+                    if ((string)langItems[i].Tag == currentCode)
                     {
-                        if ((string)langItems[i].Tag == currentLang.FileName)
-                        {
-                            langCombo.SelectedIndex = i;
-                            break;
-                        }
+                        langCombo.SelectedIndex = i;
+                        break;
                     }
                 }
             }
@@ -167,14 +164,19 @@ namespace PRoCon.UI.Views
         private void OnLanguageChanged(object sender, SelectionChangedEventArgs e)
         {
             var combo = this.FindControl<ComboBox>("LanguageComboBox");
-            if (combo?.SelectedItem is ComboBoxItem item && item.Tag is string fileName)
+            if (combo?.SelectedItem is ComboBoxItem item && item.Tag is string langCode)
             {
-                if (_application?.Languages != null && _application.Languages.Contains(fileName))
+                Services.Loc.SetLanguage(langCode);
+
+                // Also update the legacy loc system for backward compat
+                string locFileName = langCode + ".loc";
+                if (_application?.Languages != null && _application.Languages.Contains(locFileName))
                 {
-                    _application.CurrentLanguage = _application.Languages[fileName];
+                    _application.CurrentLanguage = _application.Languages[locFileName];
                     _application.SaveMainConfig();
-                    SetStatus($"Language changed to: {item.Content}");
                 }
+
+                SetStatus($"Language changed to: {item.Content}");
             }
         }
 
