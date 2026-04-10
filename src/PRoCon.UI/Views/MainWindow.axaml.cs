@@ -1616,6 +1616,10 @@ namespace PRoCon.UI.Views
                     client.AutomaticallyConnect = false;
                     client.Shutdown();
                 }
+                entry.State = ServerConnectionState.Disconnected;
+                entry.ConsoleLogger?.Dispose();
+                entry.ConsoleLogger = null;
+                UpdateSidebarButtons();
             }
         }
 
@@ -1766,7 +1770,8 @@ namespace PRoCon.UI.Views
             foreach (var srv in servers)
             {
                 string host = srv["host"]?.ToString() ?? "";
-                ushort port = (ushort)(srv["port"]?.ToObject<int>() ?? 47200);
+                int rawPort = srv["port"]?.ToObject<int>() ?? 47200;
+                ushort port = (rawPort > 0 && rawPort <= 65535) ? (ushort)rawPort : (ushort)47200;
                 string name = srv["name"]?.ToString() ?? "";
                 string gameType = srv["gameType"]?.ToString() ?? "";
                 string nickname = srv["nickname"]?.ToString() ?? "";

@@ -187,10 +187,6 @@
         <Border Grid.Column="1" Background="Transparent" />
         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="0"
                     Margin="0,0,0,0" VerticalAlignment="Stretch">
-          <Button Content="&#9788;" FontSize="14" Padding="10,4"
-                  Background="Transparent" Foreground="{DynamicResource TitleBarTextBrush}"
-                  BorderThickness="0" CornerRadius="0" VerticalAlignment="Stretch"
-                  Click="OnToggleTheme" ToolTip.Tip="Toggle Theme" />
           <Button Content="&#9881;" FontSize="14" Padding="10,4"
                   Background="Transparent" Foreground="{DynamicResource TitleBarTextBrush}"
                   BorderThickness="0" CornerRadius="0" VerticalAlignment="Stretch"

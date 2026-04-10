@@ -34,7 +34,7 @@ namespace PRoCon.UI.Models
 
         private string _nickname;
         /// <summary>
-        /// User-defined short label for the sidebar icon (max ~4 chars).
+        /// User-defined short label for the sidebar icon (max 5 chars).
         /// When set, overrides the auto-generated Initials.
         /// </summary>
         public string Nickname
