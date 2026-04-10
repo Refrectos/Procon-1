@@ -677,8 +677,8 @@ namespace PRoCon.Core.Plugin
                     }
                     else if (kvp.Value != null && TryWriteAssemblyImage(kvp.Value, dest))
                     {
-                        // Single-file publish — assembly is in memory with no file path,
-                        // extract image bytes from the loaded module
+                        // Single-file publish — assembly has no file path,
+                        // found DLL in NuGet package cache as fallback
                     }
                     else
                     {
