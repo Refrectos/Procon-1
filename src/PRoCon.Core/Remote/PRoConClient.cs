@@ -1,4 +1,4 @@
-﻿/*  Copyright 2010 Geoffrey 'Phogue' Green
+/*  Copyright 2010 Geoffrey 'Phogue' Green
 
     http://www.phogue.net
  
@@ -2746,8 +2746,35 @@ namespace PRoCon.Core.Remote
 
         #region Procon Extensions
 
+
+        // BFBC2 Russian charset remapping
+        // BFBC2 uses a non-standard Cyrillic glyph order, so we remap chars before sending.
+        private static readonly Dictionary<char, char> Bfbc2RuRemap = new Dictionary<char, char>() {
+            {'а','т'}, {'б','О'}, {'в','щ'}, {'г','Ф'}, {'д','А'}, {'е','у'},
+            {'ж','Ц'}, {'з','П'}, {'и','ф'}, {'й','М'}, {'к','ь'}, {'л','ы'},
+            {'м','ю'}, {'н','ц'}, {'о','ш'}, {'п','Б'}, {'р','ч'}, {'с','о'},
+            {'т','а'}, {'у','Г'}, {'ф','п'}, {'х','й'}, {'ц','е'}, {'ч','У'},
+            {'ш','Я'}, {'щ','и'}, {'ы','Л'}, {'ь','И'}, {'э','к'}, {'ю','г'},
+            {'я','З'}, {'А','э'}, {'Б','Э'}, {'В','К'}, {'Г','в'}, {'Д','Е'},
+            {'Е','я'}, {'З','Ы'}, {'И','В'}, {'Й','ж'}, {'К','С'}, {'Л','Х'},
+            {'М','Ч'}, {'Н','Д'}, {'О','ъ'}, {'П','Н'}, {'Р','Ж'}, {'С','Й'},
+            {'Т','Е'}, {'У','Ш'}, {'Ц','м'}, {'Ч','д'}, {'Ш','л'}, {'Ы','а'},
+            {'Ь','б'}, {'Э','о'}, {'Я','Ь'},
+        };
+
+        private static string Bfbc2RuEncode(string text) {
+            if (text == null) return text;
+            var sb = new System.Text.StringBuilder(text.Length);
+            foreach (char c in text) {
+                char mapped;
+                sb.Append(Bfbc2RuRemap.TryGetValue(c, out mapped) ? mapped : c);
+            }
+            return sb.ToString();
+        }
+
         public void SendProconAdminSay(string strText, string strPlayerSubset, string strTarget)
         {
+            strText = Bfbc2RuEncode(strText);
             if (strTarget.Length > 0)
             {
                 SendProconLayerPacket(null, new Packet(false, false, Game.Connection.AcquireSequenceNumber, new List<string>() {
@@ -2771,6 +2798,7 @@ namespace PRoCon.Core.Remote
 
         public void SendProconAdminYell(string strText, string strDisplayTime, string strPlayerSubset, string strTarget)
         {
+            strText = Bfbc2RuEncode(strText);
             if (strTarget.Length > 0)
             {
                 SendProconLayerPacket(null, new Packet(false, false, Game.Connection.AcquireSequenceNumber, new List<string>() {
