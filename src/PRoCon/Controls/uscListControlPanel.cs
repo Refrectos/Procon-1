@@ -1310,8 +1310,16 @@ namespace PRoCon.Controls
                     }
                     else if (ctsTimeout.Subset == TimeoutSubset.TimeoutSubsetType.Round)
                     {
-                        lviBanEntry.SubItems["timeremaining"].Text =
-                            ctsTimeout.Timeout + " " + this.m_prcClient.Language.GetLocalized("uscListControlPanel.tabBanlist.lsvBanlist.colTimeRemaining.Round", null);
+                        // BFBC2 returns temporary bans as "rounds" type with seconds value
+                        if (ctsTimeout.Timeout > 0)
+                        {
+                            lviBanEntry.SubItems["timeremaining"].Text = this.SecondsToText((UInt32)ctsTimeout.Timeout, this.ma_strTimeDescriptionsShort);
+                            ctsTimeout.Timeout -= (this.tmrRefreshBanlist.Interval / 1000);
+                        }
+                        else
+                        {
+                            lviBanEntry.SubItems["timeremaining"].Text = this.m_prcClient.Language.GetLocalized("uscListControlPanel.tabBanlist.lsvBanlist.colTimeRemaining.Unbanned", null);
+                        }
                     }
                     else if (ctsTimeout.Subset == TimeoutSubset.TimeoutSubsetType.Seconds)
                     {
